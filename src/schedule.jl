@@ -1,5 +1,3 @@
-schedule() = println("https://pretalx.com/juliacon2021/schedule/")
-
 """
 Download the conference schedule as a nested JSON object.
 """
@@ -57,12 +55,36 @@ function get_running_talks(; now=Dates.now())
     return current_talks
 end
 
+function _track2color(track::Symbol)
+    if track == Symbol("Red Track")
+        return :red
+    elseif track == Symbol("Green Track")
+        return :green
+    elseif track == Symbol("Purple Track")
+        return :magenta
+    else
+        return :default
+    end
+end
+
+function _print_running_talks(current_talks; now=Dates.now())
+    !isnothing(current_talks) || return nothing
+    # println()
+    # println(Dates.format(Dates.now(), "HH:MM dd-mm-YYYY"))
+    for (track, talk) in current_talks
+        println()
+        printstyled(track, bold=true, color=_track2color(track))
+        println()
+        println("\t", talk.title, " (", talk.type,")")
+        println("\t", "└─ ", talk.url)
+    end
+    println("\n")
+    println("(Full schedule: https://pretalx.com/juliacon2021/schedule)")
+    return nothing
+end
+
 function now(; now=Dates.now())
     current_talks = get_running_talks(; now=now)
-    if !isnothing(current_talks)
-        for (track, talk) in current_talks
-            println(track, ": ", talk.title)
-        end
-    end
+    _print_running_talks(current_talks; now=now)
     return nothing
 end

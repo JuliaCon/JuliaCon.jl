@@ -1,5 +1,6 @@
 module JuliaCon
 
+using Base: String
 using Distributed
 using Dates: Dates, Date, DateTime, Time, Hour, Minute
 using JSON3
@@ -29,12 +30,9 @@ function __init__()
             if myid() != 1
                 # suppress REPL warnings and "activating ..." messages
                 using Pkg, Logging
-                orig_io = Pkg.DEFAULT_IO[]
-                Pkg.DEFAULT_IO[] = IOBuffer()
                 with_logger(NullLogger()) do
-                    Pkg.REPLMode.pkgstr("activate $env")
+                    Pkg.activate(env, io=devnull)
                 end
-                Pkg.DEFAULT_IO[] = orig_io
             end
         end
         # load JuliaCon.jl on all workers
@@ -42,6 +40,6 @@ function __init__()
     end
 end
 
-export juliacon2021, schedule, now
+export juliacon2021, now
 
 end
