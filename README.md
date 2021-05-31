@@ -1,6 +1,7 @@
 # JuliaCon 2021 REPL T-Shirt
 
 [![Build Status](https://github.com/crstnbr/JuliaCon.jl/workflows/CI/badge.svg)](https://github.com/crstnbr/JuliaCon.jl/actions)
+[![Coverage](https://codecov.io/gh/crstnbr/JuliaCon.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/crstnbr/JuliaCon.jl)
 
 Making the code on the JuliaCon 2021 T-shirt work! Of course, you should [buy one here](https://www.bonfire.com/juliacon-repl/)!
 
