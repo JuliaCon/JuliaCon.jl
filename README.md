@@ -5,6 +5,10 @@
 
 Making the code on the JuliaCon 2021 T-shirt work! Of course, you should [buy one here](https://www.bonfire.com/juliacon-repl/)!
 
-<img width="919" alt="Screenshot 2021-05-30 at 17 07 38" src="https://user-images.githubusercontent.com/187980/120109394-8ca0b000-c169-11eb-8617-e55bb0a44cee.png">
-
 To make the `@everywhere` do something you need to start Julia with multiple worker processes: `julia -p 4`.
+
+<img width="588" alt="Screenshot 2021-05-31 at 22 28 07" src="https://user-images.githubusercontent.com/187980/120239846-7c6afc80-c25f-11eb-892b-dd52be136f36.png">
+
+## Demo
+
+<img width="700" alt="Screenshot 2021-05-31 at 22 34 12" src="https://user-images.githubusercontent.com/187980/120240233-5a25ae80-c260-11eb-89a5-74f02c1dd475.png">
