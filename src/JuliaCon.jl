@@ -1,8 +1,12 @@
 module JuliaCon
 
 using Distributed
+using Dates: Dates, Date, DateTime, Time, Hour, Minute
+using JSON3
+using UrlDownload
 
 include("countries.jl")
+include("schedule.jl")
 
 function juliacon2021()
     if myid() == 1
@@ -38,6 +42,6 @@ function __init__()
     end
 end
 
-export juliacon2021
+export juliacon2021, schedule, now
 
 end
