@@ -1,6 +1,5 @@
 module JuliaCon
 
-using Requires
 using Distributed
 
 include("countries.jl")
@@ -21,23 +20,21 @@ function __init__()
         env = Base.active_project()
         @everywhere env = $env
 
-        @require Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b" begin
-            # activate local env of the master process on all the workers
-            @eval Main @everywhere begin
-                if myid() != 1
-                    # suppress REPL warnings and "activating ..." messages
-                    using Pkg, Logging
-                    orig_io = Pkg.DEFAULT_IO[]
-                    Pkg.DEFAULT_IO[] = IOBuffer()
-                    with_logger(NullLogger()) do
-                        Pkg.REPLMode.pkgstr("activate $env")
-                    end
-                    Pkg.DEFAULT_IO[] = orig_io
+        # activate local env of the master process on all the workers
+        @eval Main @everywhere begin
+            if myid() != 1
+                # suppress REPL warnings and "activating ..." messages
+                using Pkg, Logging
+                orig_io = Pkg.DEFAULT_IO[]
+                Pkg.DEFAULT_IO[] = IOBuffer()
+                with_logger(NullLogger()) do
+                    Pkg.REPLMode.pkgstr("activate $env")
                 end
+                Pkg.DEFAULT_IO[] = orig_io
             end
-            # load JuliaCon.jl on all workers
-            @eval Main @everywhere using JuliaCon
         end
+        # load JuliaCon.jl on all workers
+        @eval Main @everywhere using JuliaCon
     end
 end
 
