@@ -4,9 +4,10 @@ On first call, the schedule is downloaded from Pretalx and cached for further us
 """
 function get_conference_schedule()
     if !isassigned(jcon)
-        data = urldownload(CONFERENCE_SCHEDULE_JSON_URL)
+        file = download(CONFERENCE_SCHEDULE_JSON_URL)
         try
-            jcon[] = json2struct(data.schedule.conference)
+            data = JSON.parsefile(file)
+            jcon[] = json2struct(data["schedule"]["conference"])
         catch err
             error("Couldn't parse JSON schedule.")
             println(err)

@@ -36,34 +36,34 @@ struct JuliaConSchedule
     days::Vector{JuliaConDay}
 end
 
-function json2struct(conf::JSON3.Object)
-    jcon_days = Vector{JuliaConDay}(undef, length(conf.days))
+function json2struct(conf)
+    jcon_days = Vector{JuliaConDay}(undef, length(conf["days"]))
     k=1
-    for day in conf.days
-        jcon_tracks = Vector{JuliaConTrack}(undef, length(day.rooms))
+    for day in conf["days"]
+        jcon_tracks = Vector{JuliaConTrack}(undef, length(day["rooms"]))
         j = 1
-        for (track, talks) in day.rooms
+        for (track, talks) in day["rooms"]
             jcon_talks = Vector{JuliaConTalk}(undef, length(talks))
             for (i, talk) in enumerate(talks)
-                jcon_talks[i] = JuliaConTalk(talk.start, talk.duration, talk.url, talk.title, talktype_from_str(talk.type), String[p.public_name for p in talk.persons])
+                jcon_talks[i] = JuliaConTalk(talk["start"], talk["duration"], talk["url"], talk["title"], talktype_from_str(talk["type"]), String[p["public_name"] for p in talk["persons"]])
             end
             jcon_tracks[j] = JuliaConTrack(string(track), jcon_talks)
             j+=1
         end
         jcon_days[k] = JuliaConDay(
             k,
-            Date(day.date),
-            DateTime(day.day_start[1:end-6]),
-            DateTime(day.day_end[1:end-6]),
+            Date(day["date"]),
+            DateTime(day["day_start"][1:end-6]),
+            DateTime(day["day_end"][1:end-6]),
             jcon_tracks
         )
         k+=1
     end
 
     jcon = JuliaConSchedule(
-        Date(conf.start),
-        Date(conf.end),
-        length(conf.days),
+        Date(conf["start"]),
+        Date(conf["end"]),
+        length(conf["days"]),
         jcon_days
     )
     return jcon

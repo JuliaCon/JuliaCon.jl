@@ -3,8 +3,8 @@ module JuliaCon
 import Base: show
 using Distributed
 using Dates: Dates, Date, DateTime, Time, Hour, Minute
-using JSON3
-using UrlDownload
+using JSON
+using Downloads: download
 using PrettyTables
 
 include("countries.jl")
