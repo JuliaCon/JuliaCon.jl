@@ -1,19 +1,18 @@
 module JuliaCon
 
+using Base: String, alignment
 using Distributed
+using Dates: Dates, Date, DateTime, Time, Hour, Minute
+using JSON3
+using UrlDownload
+using PrettyTables
+
+const CONFERENCE_SCHEDULE_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
+const conf_json = Ref{JSON3.Object{Vector{UInt8}, SubArray{UInt64, 1, Vector{UInt64}, Tuple{UnitRange{Int64}}, true}}}()
 
 include("countries.jl")
-
-function juliacon2021()
-    if myid() == 1
-        return println(
-            "Welcome to JuliaCon 2021! Find more information on https://juliacon.org/2021/."
-        )
-    else
-        return println("Greetings from ", rand(countries), "!")
-    end
-    return nothing
-end
+include("schedule.jl")
+include("tshirtcode.jl")
 
 function __init__()
     if isdefined(Main, :Distributed)
@@ -25,12 +24,9 @@ function __init__()
             if myid() != 1
                 # suppress REPL warnings and "activating ..." messages
                 using Pkg, Logging
-                orig_io = Pkg.DEFAULT_IO[]
-                Pkg.DEFAULT_IO[] = IOBuffer()
                 with_logger(NullLogger()) do
-                    Pkg.REPLMode.pkgstr("activate $env")
+                    Pkg.activate(env, io=devnull)
                 end
-                Pkg.DEFAULT_IO[] = orig_io
             end
         end
         # load JuliaCon.jl on all workers
@@ -38,6 +34,6 @@ function __init__()
     end
 end
 
-export juliacon2021
+export juliacon2021, now, today
 
 end
