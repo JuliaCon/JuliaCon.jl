@@ -12,7 +12,8 @@ include("schedule_structs.jl")
 include("schedule.jl")
 include("tshirtcode.jl")
 
-const CONFERENCE_SCHEDULE_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
+# const CONFERENCE_SCHEDULE_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
+const CONFERENCE_SCHEDULE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2020_schedule.json"
 const jcon = Ref{JuliaConSchedule}()
 
 function __init__()
