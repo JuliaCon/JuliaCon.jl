@@ -1,18 +1,20 @@
 module JuliaCon
 
-using Base: String, alignment
+import Base: show
 using Distributed
 using Dates: Dates, Date, DateTime, Time, Hour, Minute
-using JSON3
-using UrlDownload
+using JSON
+using Downloads: download
 using PrettyTables
 
-const CONFERENCE_SCHEDULE_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
-const conf_json = Ref{JSON3.Object{Vector{UInt8}, SubArray{UInt64, 1, Vector{UInt64}, Tuple{UnitRange{Int64}}, true}}}()
-
 include("countries.jl")
+include("schedule_structs.jl")
 include("schedule.jl")
 include("tshirtcode.jl")
+
+# const CONFERENCE_SCHEDULE_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
+const CONFERENCE_SCHEDULE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2020_schedule.json"
+const jcon = Ref{JuliaConSchedule}()
 
 function __init__()
     if isdefined(Main, :Distributed)

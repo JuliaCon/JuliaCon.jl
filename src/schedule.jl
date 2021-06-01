@@ -2,25 +2,26 @@
 Get the conference schedule as a nested JSON object.
 On first call, the schedule is downloaded from Pretalx and cached for further usage.
 """
-function get_conference_json()
-    if !isassigned(conf_json)
-        data = urldownload(CONFERENCE_SCHEDULE_JSON_URL)
+function get_conference_schedule()
+    if !isassigned(jcon)
+        file = download(CONFERENCE_SCHEDULE_JSON_URL)
         try
-            conf_json[] = data.schedule.conference
+            data = JSON.parsefile(file)
+            jcon[] = json2struct(data["schedule"]["conference"])
         catch err
-            error("Invalid conference schedule JSON file.")
+            error("Couldn't parse JSON schedule.")
             println(err)
         end
     end
 
-    return conf_json[]
+    return jcon[]
 end
 
 """
-Given a room (i.e. a fixed day and track), it finds the talks that are running now (it only compares times).
+Given a track (i.e. a fixed day), it finds the talks that are running now (it only compares times).
 """
-function _find_current_talk_in_room(room::JSON3.Array; now=Dates.now())
-    for talk in room
+function _find_current_talk_in_track(track::JuliaConTrack; now=Dates.now())
+    for talk in track.talks
         start_time = Time(talk.start)
         dur = Time(talk.duration)
         end_time = start_time + Hour(dur) + Minute(dur)
@@ -32,30 +33,29 @@ function _find_current_talk_in_room(room::JSON3.Array; now=Dates.now())
 end
 
 """
-Given a fixed day, it finds the talks in all tracks / rooms that are running now (it only compares times).
+Given a fixed day, it finds the talks in all tracks that are running now (it only compares times).
 
-Returns a vector of tuples of the type `(room::Symbol, talk::JSON3.Object)`.
+Returns a vector of tuples of the type `(track::String, talk::JuliaConTalk)`.
 """
-function _find_current_talks_on_day(d::JSON3.Object; now=Dates.now())
-    query_result = [(r, _find_current_talk_in_room(d.rooms[r]; now=now)) for r in keys(d.rooms)]
+function _find_current_talks_on_day(d::JuliaConDay; now=Dates.now())::Vector{Tuple{String, JuliaConTalk}}
+    query_result = Vector{Tuple{String, JuliaConTalk}}(undef, length(d.tracks))
+    for (i, track) in enumerate(d.tracks)
+        query_result[i] = (track.name, _find_current_talk_in_track(track; now=now))
+    end
     return filter(x->!isnothing(x[2]), query_result)
 end
 
-
-# now_fake = DateTime("2020-07-29T16:30:00.000")
-
 function get_running_talks(; now=Dates.now())
-    conf = get_conference_json()
-    days = Date[Date(d.date) for d in conf.days]
+    jcon = get_conference_schedule()
     
-    dayidx = findfirst(isequal(Date(now)), days)
+    dayidx = findfirst(d -> d.date == Date(now), jcon.days)
     if isnothing(dayidx)
         @info "There is no JuliaCon program today!"
         return nothing
     end
     
-    d = conf.days[dayidx]
-    if !(DateTime(d.day_start[1:end-6]) <= now <= DateTime(d.day_end[1:end-6]))
+    d = jcon.days[dayidx]
+    if !(d.start <= now <= d.stop)
         @info "There is no JuliaCon program now!"
         return nothing
     end
@@ -64,12 +64,12 @@ function get_running_talks(; now=Dates.now())
     return current_talks
 end
 
-function _track2color(track::Symbol)
-    if track == Symbol("Red Track")
+function _track2color(track::String)
+    if track == "Red Track"
         return :red
-    elseif track == Symbol("Green Track")
+    elseif track == "Green Track"
         return :green
-    elseif track == Symbol("Purple Track")
+    elseif track == "Purple Track"
         return :magenta
     else
         return :default
@@ -85,6 +85,7 @@ function _print_running_talks(current_talks; now=Dates.now())
         printstyled(track, bold=true, color=_track2color(track))
         println()
         println("\t", talk.title, " (", talk.type,")")
+        println("\t", "├─ ", speakers2str(talk.speaker))
         println("\t", "└─ ", talk.url)
     end
     println("\n")
@@ -99,36 +100,39 @@ function now(; now=Dates.now())
 end
 
 function get_today(; now=Dates.now())
-    conf = get_conference_json()
-    days = [Date(d.date) for d in conf.days]
-
-    dayidx = findfirst(isequal(Date(now)), days)
+    jcon = get_conference_schedule()
+    
+    dayidx = findfirst(d -> d.date == Date(now), jcon.days)
     if isnothing(dayidx)
         @info "There is no JuliaCon program today!"
         return nothing
     end
+    
+    d = jcon.days[dayidx]
 
-    d = conf.days[dayidx]
-    schedule = Vector{Tuple{String, Matrix{String}}}(undef, length(d.rooms))
+    schedule = Vector{Tuple{String, Matrix{String}}}(undef, length(d.tracks))
     i = 1
-    for (track, talks) in d.rooms
-        timetable = Matrix{String}(undef, length(talks), 4)
-        for (j, talk) in enumerate(talks)
+    for track in d.tracks
+        timetable = Matrix{String}(undef, length(track.talks), 5)
+        for (j, talk) in enumerate(track.talks)
             timetable[j,1] = talk.start
             timetable[j,2] = talk.title
-            timetable[j,3] = talk.type
-            timetable[j,4] = talk.duration
+            timetable[j,3] = abbrev(talk.type) # string(talk.type)
+            timetable[j,4] = speakers2str(talk.speaker)
+            timetable[j,5] = talk.duration
         end
-        schedule[i] = (string(track), timetable)
+        schedule[i] = (track.name, timetable)
         i+=1
     end
     return schedule
 end
 
+speakers2str(speaker::Vector{String}) = join(speaker, ", ")
+
 function today(; now=Dates.now(), track=nothing)
     track_schedules = get_today(; now=now)
     isnothing(track_schedules) && return nothing
-    header = (["Time", "Title", "Type"],)
+    header = (["Time", "Title", "Type", "Speaker"],)
     header_crayon = crayon"dark_gray bold"
     border_crayon = crayon"dark_gray"
     h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
@@ -136,31 +140,39 @@ function today(; now=Dates.now(), track=nothing)
         !isnothing(track) && tr != track && continue
         h_current = _get_current_talk_highlighter(sched; now=now)
         println()
-        pretty_table(@view sched[:,1:3];
+        pretty_table(@view sched[:,1:4];
             title = tr,
-            title_crayon = Crayon(foreground = _track2color(Symbol(tr)), bold = true),
+            title_crayon = Crayon(foreground = _track2color(tr), bold = true),
             header = header,
             header_crayon = header_crayon,
             border_crayon = border_crayon,
             highlighters = (h_times, h_current),
             tf = tf_unicode_rounded,
-            alignment = :l,
+            alignment = [:c,:l,:c,:l],
         )
     end
     println()
-    println("Check out https://pretalx.com/juliacon2021/schedule for more information.")
-    println()
-    printstyled("(Currently running talks are highlighted in ")
+    printstyled("Currently running talks are highlighted in ")
     printstyled("yellow", color=:yellow)
-    printstyled(".)")
+    printstyled(".")
     println()
+    println()
+    print(abbrev(Talk), " = Talk, ")
+    print(abbrev(LightningTalk), " = Lightning Talk, ")
+    print(abbrev(SponsorTalk), " = Sponsor Talk, ")
+    println(abbrev(Keynote), " = Keynote, ")
+    print(abbrev(Workshop), " = Workshop, ")
+    print(abbrev(Minisymposia), " = Minisymposia, ")
+    println(abbrev(BoF), " = Birds of Feather")
+    println()
+    println("Check out https://pretalx.com/juliacon2021/schedule for more information.")
     return nothing
 end
 
 function _get_current_talk_highlighter(sched; now=Dates.now())
     for (i, talk) in enumerate(eachrow(sched))
         start_time = Time(talk[1])
-        dur = Time(talk[4])
+        dur = Time(talk[5])
         end_time = start_time + Hour(dur) + Minute(dur)
         if start_time <= Time(now) <= end_time
             return Highlighter((data, m, n) -> m == i, crayon"yellow")
