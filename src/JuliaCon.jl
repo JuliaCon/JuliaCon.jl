@@ -1,10 +1,11 @@
 module JuliaCon
 
-using Base: String
+using Base: String, alignment
 using Distributed
 using Dates: Dates, Date, DateTime, Time, Hour, Minute
 using JSON3
 using UrlDownload
+using PrettyTables
 
 include("countries.jl")
 include("schedule.jl")
@@ -40,6 +41,6 @@ function __init__()
     end
 end
 
-export juliacon2021, now
+export juliacon2021, now, today
 
 end

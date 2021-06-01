@@ -88,3 +88,73 @@ function now(; now=Dates.now())
     _print_running_talks(current_talks; now=now)
     return nothing
 end
+
+function get_today(; now=Dates.now())
+    conf = getschedulejson()
+    days = [Date(d.date) for d in conf.days]
+
+    dayidx = findfirst(isequal(Date(now)), days)
+    if isnothing(dayidx)
+        @info "There is no JuliaCon program today!"
+        return nothing
+    end
+
+    d = conf.days[dayidx]
+    schedule = Vector{Tuple{String, Matrix{String}}}(undef, length(d.rooms))
+    i = 1
+    for (track, talks) in d.rooms
+        timetable = Matrix{String}(undef, length(talks), 4)
+        for (j, talk) in enumerate(talks)
+            timetable[j,1] = talk.start
+            timetable[j,2] = talk.title
+            timetable[j,3] = talk.type
+            timetable[j,4] = talk.duration
+        end
+        schedule[i] = (string(track), timetable)
+        i+=1
+    end
+    return schedule
+end
+
+function today(; now=Dates.now(), track=nothing)
+    track_schedules = get_today(; now=now)
+    header = (["Time", "Title", "Type"],)
+    header_crayon = crayon"dark_gray bold"
+    border_crayon = crayon"dark_gray"
+    h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
+    for (tr, sched) in track_schedules
+        !isnothing(track) && tr != track && continue
+        h_current = _get_current_talk_highlighter(sched; now=now)
+        println()
+        pretty_table(@view sched[:,1:3];
+            title = tr,
+            title_crayon = Crayon(foreground = _track2color(Symbol(tr)), bold = true),
+            header = header,
+            header_crayon = header_crayon,
+            border_crayon = border_crayon,
+            highlighters = (h_times, h_current),
+            tf = tf_unicode_rounded,
+            alignment = :l,
+        )
+    end
+    println()
+    println("Check out https://pretalx.com/juliacon2021/schedule for more information.")
+    println()
+    printstyled("(Currently running talks are highlighted in ")
+    printstyled("yellow", color=:yellow)
+    printstyled(".)")
+    println()
+    return nothing
+end
+
+function _get_current_talk_highlighter(sched; now=Dates.now())
+    for (i, talk) in enumerate(eachrow(sched))
+        start_time = Time(talk[1])
+        dur = Time(talk[4])
+        end_time = start_time + Hour(dur) + Minute(dur)
+        if start_time <= Time(now) <= end_time
+            return Highlighter((data, m, n) -> m == i, crayon"yellow")
+        end
+    end
+    return nothing
+end
