@@ -118,6 +118,7 @@ end
 
 function today(; now=Dates.now(), track=nothing)
     track_schedules = get_today(; now=now)
+    isnothing(track_schedules) && return nothing
     header = (["Time", "Title", "Type"],)
     header_crayon = crayon"dark_gray bold"
     border_crayon = crayon"dark_gray"
