@@ -1,10 +1,19 @@
 """
-Download the conference schedule as a nested JSON object.
+Get the conference schedule as a nested JSON object.
+On first call, the schedule is downloaded from Pretalx and cached for further usage.
 """
-function getschedulejson()
-    url = "https://pretalx.com/juliacon2020/schedule/export/schedule.json";
-    data = urldownload(url)
-    return data.schedule.conference
+function get_conference_json()
+    if !isassigned(conf_json)
+        data = urldownload(CONFERENCE_SCHEDULE_JSON_URL)
+        try
+            conf_json[] = data.schedule.conference
+        catch err
+            error("Invalid conference schedule JSON file.")
+            println(err)
+        end
+    end
+
+    return conf_json[]
 end
 
 """
@@ -36,8 +45,8 @@ end
 # now_fake = DateTime("2020-07-29T16:30:00.000")
 
 function get_running_talks(; now=Dates.now())
-    conf = getschedulejson()
-    days = [Date(d.date) for d in conf.days]
+    conf = get_conference_json()
+    days = Date[Date(d.date) for d in conf.days]
     
     dayidx = findfirst(isequal(Date(now)), days)
     if isnothing(dayidx)
@@ -90,7 +99,7 @@ function now(; now=Dates.now())
 end
 
 function get_today(; now=Dates.now())
-    conf = getschedulejson()
+    conf = get_conference_json()
     days = [Date(d.date) for d in conf.days]
 
     dayidx = findfirst(isequal(Date(now)), days)

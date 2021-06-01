@@ -7,19 +7,12 @@ using JSON3
 using UrlDownload
 using PrettyTables
 
+const CONFERENCE_SCHEDULE_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
+const conf_json = Ref{JSON3.Object{Vector{UInt8}, SubArray{UInt64, 1, Vector{UInt64}, Tuple{UnitRange{Int64}}, true}}}()
+
 include("countries.jl")
 include("schedule.jl")
-
-function juliacon2021()
-    if myid() == 1
-        return println(
-            "Welcome to JuliaCon 2021! Find more information on https://juliacon.org/2021/."
-        )
-    else
-        return println("Greetings from ", rand(countries), "!")
-    end
-    return nothing
-end
+include("tshirtcode.jl")
 
 function __init__()
     if isdefined(Main, :Distributed)
