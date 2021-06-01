@@ -141,7 +141,7 @@ const countries = [
     "Mauritania",
     "Mauritius",
     "Mayotte",
-    "Mexico",
+    "México",
     "Micronesia",
     "Moldova",
     "Monaco",
