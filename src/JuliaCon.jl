@@ -8,13 +8,17 @@ using Downloads: download
 using PrettyTables
 
 include("countries.jl")
+include("tshirtcode.jl")
 include("schedule_structs.jl")
 include("schedule.jl")
-include("tshirtcode.jl")
+include("debugmode.jl")
 
-# const CONFERENCE_SCHEDULE_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
-const CONFERENCE_SCHEDULE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2020_schedule/schedule.json"
+const PRETALX_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
+const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2020_schedule/schedule.json"
 const jcon = Ref{JuliaConSchedule}()
+
+default_json_url() = DATA_ARCHIVE_JSON_URL
+default_now() = Dates.now()
 
 function __init__()
     if isdefined(Main, :Distributed)
@@ -27,7 +31,7 @@ function __init__()
                 # suppress REPL warnings and "activating ..." messages
                 using Pkg, Logging
                 with_logger(NullLogger()) do
-                    Pkg.activate(env, io=devnull)
+                    Pkg.activate(env; io=devnull)
                 end
             end
         end
@@ -36,6 +40,6 @@ function __init__()
     end
 end
 
-export juliacon2021, now, today
+export juliacon2021
 
 end
