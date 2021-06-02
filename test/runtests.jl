@@ -3,8 +3,6 @@ using Test
 using Distributed
 import Dates
 
-fakenow = Dates.DateTime("2020-07-29T16:30:00.000") # JuliaCon2020
-
 @testset "JuliaCon.jl" begin
     @testset "juliacon2021()" begin
         @info "Local:"
@@ -19,11 +17,28 @@ fakenow = Dates.DateTime("2020-07-29T16:30:00.000") # JuliaCon2020
         end
     end
 
+    @testset "Debug mode" begin
+        fakenow = Dates.DateTime("2020-07-29T16:30:00.000")
+        @test JuliaCon.default_now() != fakenow
+        @test isnothing(JuliaCon.debugmode())
+        @test JuliaCon.default_now() == fakenow
+        @test isnothing(JuliaCon.debugmode(false))
+        @test JuliaCon.default_now() != fakenow
+
+        @test JuliaCon.default_json_url() == JuliaCon.DATA_ARCHIVE_JSON_URL
+        @test isnothing(JuliaCon.set_json_source(:pretalx))
+        @test JuliaCon.default_json_url() == JuliaCon.PRETALX_JSON_URL
+        @test isnothing(JuliaCon.set_json_source(:github))
+        @test JuliaCon.default_json_url() == JuliaCon.DATA_ARCHIVE_JSON_URL
+    end
+
     @testset "Schedule" begin
+        JuliaCon.debugmode()
         @test isnothing(JuliaCon.now())
-        @test isnothing(JuliaCon.now(; now=fakenow))
+        @test isnothing(JuliaCon.now())
         @test isnothing(JuliaCon.today())
-        @test isnothing(JuliaCon.today(; now=fakenow))
-        @test isnothing(JuliaCon.today(; now=fakenow, track="BoF"))
+        @test isnothing(JuliaCon.today())
+        @test isnothing(JuliaCon.today(track="BoF"))
+        JuliaCon.debugmode(false)
     end
 end
