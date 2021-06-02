@@ -8,9 +8,9 @@ using Downloads: download
 using PrettyTables
 
 include("countries.jl")
+include("tshirtcode.jl")
 include("schedule_structs.jl")
 include("schedule.jl")
-include("tshirtcode.jl")
 include("debugmode.jl")
 
 const PRETALX_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
@@ -40,6 +40,6 @@ function __init__()
     end
 end
 
-export juliacon2021, now, today
+export juliacon2021
 
 end

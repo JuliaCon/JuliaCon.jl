@@ -33,6 +33,10 @@ import Dates
     end
 
     @testset "Schedule" begin
+        @test !isassigned(JuliaCon.jcon)
+        JuliaCon.update_schedule()
+        @test isassigned(JuliaCon.jcon)
+
         JuliaCon.debugmode()
         @test isnothing(JuliaCon.now())
         @test isnothing(JuliaCon.now())

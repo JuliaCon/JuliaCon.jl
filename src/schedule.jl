@@ -3,17 +3,7 @@ Get the conference schedule as a nested JSON object.
 On first call, the schedule is downloaded from Pretalx and cached for further usage.
 """
 function get_conference_schedule()
-    if !isassigned(jcon)
-        file = download(default_json_url())
-        try
-            data = JSON.parsefile(file)
-            jcon[] = json2struct(data["schedule"]["conference"])
-        catch err
-            error("Couldn't parse JSON schedule.")
-            println(err)
-        end
-    end
-
+    isassigned(jcon) || update_schedule()
     return jcon[]
 end
 
