@@ -3,16 +3,6 @@
 [![Build Status](https://github.com/JuliaCon/JuliaCon.jl/workflows/CI/badge.svg)](https://github.com/JuliaCon/JuliaCon.jl/actions)
 [![Coverage](https://codecov.io/gh/JuliaCon/JuliaCon.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaCon/JuliaCon.jl)
 
-## Live schedule
-
-```julia
-using JuliaCon
-
-JuliaCon.now()
-
-JuliaCon.today()
-```
-
 ## T-Shirt code
 
 This package makes the code on the JuliaCon 2021 [T-shirt](#t-shirt) work! Of course, you should [buy one here](https://www.bonfire.com/juliacon-repl/)!
@@ -27,4 +17,20 @@ using JuliaCon, Distributed
 @everywhere juliacon2021()
 ```
 
-<img width="700" alt="Screenshot 2021-05-31 at 22 34 12" src="https://user-images.githubusercontent.com/187980/120240233-5a25ae80-c260-11eb-89a5-74f02c1dd475.png">
+<img width="1145" alt="Screenshot 2021-06-02 at 02 05 12" src="https://user-images.githubusercontent.com/187980/120404611-04780180-c347-11eb-860e-88eed268d1a0.png">
+
+
+## Live schedule
+
+```julia
+JuliaCon.now()
+```
+
+<img width="1145" alt="Screenshot 2021-06-02 at 02 04 16" src="https://user-images.githubusercontent.com/187980/120404636-15287780-c347-11eb-9111-ff1677d5c15c.png">
+
+
+```julia
+JuliaCon.today()
+```
+
+<img width="1904" alt="Screenshot 2021-06-02 at 02 04 33" src="https://user-images.githubusercontent.com/187980/120404647-19549500-c347-11eb-8152-cbf432cb8292.png">
