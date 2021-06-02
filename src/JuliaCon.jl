@@ -15,6 +15,7 @@ include("debugmode.jl")
 
 const PRETALX_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
 const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2020_schedule/schedule.json"
+
 const jcon = Ref{JuliaConSchedule}()
 
 default_json_url() = DATA_ARCHIVE_JSON_URL
