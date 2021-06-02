@@ -8,6 +8,31 @@ function get_conference_schedule()
 end
 
 """
+Explicitly trigger a schedule update.
+"""
+function update_schedule(; verbose=false)
+    local file
+    to = TimerOutput()
+    try
+        verbose && @info "Downloading $(default_json_url())"
+        @timeit to "download" file = download(default_json_url())
+    catch err
+        error("Couldn't download schedule.json from $(default_json_url()).")
+        println(err)
+    end
+
+    try
+        @timeit to "parse2json" data = JSON.parsefile(file)
+        @timeit to "json2struct" jcon[] = json2struct(data["schedule"]["conference"])
+    catch err
+        error("Couldn't parse JSON schedule.")
+        println(err)
+    end
+    verbose && @info string("Timings:\n", to)
+    return nothing
+end
+
+"""
 Given a track (i.e. a fixed day), it finds the talks that are running now (it only compares times).
 """
 function _find_current_talk_in_track(track::JuliaConTrack; now=default_now())
