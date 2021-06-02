@@ -6,7 +6,6 @@ using Distributed
 using Dates: Dates, Date, DateTime, Time, Hour, Minute
 using JSON
 using Downloads: download
-using HTTP
 using PrettyTables
 using TimerOutputs
 
