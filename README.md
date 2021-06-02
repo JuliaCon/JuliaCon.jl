@@ -34,3 +34,7 @@ JuliaCon.today()
 ```
 
 <img width="1904" alt="Screenshot 2021-06-02 at 02 04 33" src="https://user-images.githubusercontent.com/187980/120404647-19549500-c347-11eb-8152-cbf432cb8292.png">
+
+### Details
+
+When it is needed, the package fetches the JuliaCon schedule (`schedule.json`) from the [JuliaConDataArchive](https://github.com/JuliaCon/JuliaConDataArchive) and keeps the information in memory for further usage. Hence, by default, the fetching happens once per Julia session. To force an update of the JuliaCon schedule you can call `JuliaCon.update_schedule()`.
