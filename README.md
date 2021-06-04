@@ -39,7 +39,7 @@ JuliaCon.today()
 
 When it is needed, the package fetches the JuliaCon schedule (`schedule.json`) from the [JuliaConDataArchive](https://github.com/JuliaCon/JuliaConDataArchive) and keeps the information in memory for further usage. Hence, by default, the fetching happens once per Julia session. To force an update of the JuliaCon schedule you can call `update_schedule()`.
 
-If fetching the `schedule.json` takes longer than 5 seconds - you can change this default by setting the JULIACON_TIMEOUT env variable - the package will fall back to using the last cached version (which might be stale).
+If fetching the `schedule.json` takes longer than 5 seconds - you can change this default by setting the env variable `JULIACON_TIMEOUT` - the package will fall back to using the last cached version (which might be stale).
 
 You can set the env variable `JULIACON_CACHE_DIR` to specify the location of the cache, i.e. where the `schedule.json` will be stored.
 
