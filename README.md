@@ -35,21 +35,25 @@ JuliaCon.today()
 
 <img width="1904" alt="Screenshot 2021-06-02 at 02 04 33" src="https://user-images.githubusercontent.com/187980/120404647-19549500-c347-11eb-8152-cbf432cb8292.png">
 
+### Terminal links
+
+Wouldn't it be nice if one could click on talk titles in the schedule table and jump to the webpage of the respective talk? Some terminals, such as iTerm2 and GNOME Terminal, support the displaying of [terminal-hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) (clickable without printing the URL). We use this terminal feature to indeed make the talk titles clickable! The only thing you need to call `JuliaCon.today(; terminal_links=true)`. If you like what you see, you can use `JuliaCon.set_terminallinks(true)` to set a permanent default.
+
 ### Caching
 
 When it is needed, the package fetches the JuliaCon schedule (`schedule.json`) from the [JuliaConDataArchive](https://github.com/JuliaCon/JuliaConDataArchive) and keeps the information in memory for further usage. Hence, by default, the fetching happens once per Julia session. To force an update of the JuliaCon schedule you can call `update_schedule()`.
 
-If fetching the `schedule.json` takes longer than 5 seconds - you can change this default by setting the env variable `JULIACON_TIMEOUT` - the package will fall back to using the last cached version (which might be stale).
+If fetching the `schedule.json` takes longer than 5 seconds - you can change this default via `JuliaCon.set_timeout(secs)` - the package will fall back to using the last cached version (which might be stale).
 
-As per default, the location of the cache is `.julia/datadeps/JuliaConSchedule`. You can set the env variable `JULIACON_CACHE_DIR` to change this default.
+As per default, the location of the cache is `.julia/datadeps/JuliaConSchedule`. You can use `JuliaCon.set_cachedir(path)` to change this default.
 
 #### Cache modes
 
-There are three cache modes: `DEFAULT`, `NEVER`, `ALWAYS`. You can switch between them by setting the env variable `JULIACON_CACHE_MODE` appropriately.
+There are three cache modes: `:DEFAULT`, `:NEVER`, `:ALWAYS`. You can switch between them by calling `JuliaCon.set_cachemode(mode)` appropriately.
 
-* `DEFAULT`: As described above: tries to download / update the schedule and falls back to the cache if necessary.
-* `NEVER`: The cache will never be used / created. If the download fails it fails.
-* `ALWAYS`: Always use the cached `schedule.json`. Never attempts to download / update it.
+* `:DEFAULT`: As described above: tries to download / update the schedule and falls back to the cache if necessary.
+* `:NEVER`: The cache will never be used / created. If the download fails it fails.
+* `:ALWAYS`: Always use the cached `schedule.json`. Never attempts to download / update it.
 
 ### Testing / Debugging
 

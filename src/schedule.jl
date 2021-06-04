@@ -45,7 +45,7 @@ function update_schedule(; verbose=false, notimeout=false)
             if usecache
                 @warn "Download failed or timed out. Falling back to cached schedule (might be stale). " *
                       "You can try forcing matters with JuliaCon.update_schedule(notimeout=true) or " *
-                      "skipping the update altogether via ENV[\"JULIACON_CACHE_MODE\"] = \"ALWAYS\"."
+                      "skipping the update altogether via JuliaCon.set_cachemode(:ALWAYS)."
                 file = joinpath(CACHE_DIR, "schedule.json")
             else
                 error(
@@ -167,7 +167,7 @@ end
 
 speakers2str(speaker::Vector{String}) = join(speaker, ", ")
 
-function today(; now=default_now(), track=nothing)
+function today(; now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS)
     track_schedules = get_today(; now=now)
     isnothing(track_schedules) && return nothing
     header = (["Time", "Title", "Type", "Speaker"],)
@@ -181,7 +181,7 @@ function today(; now=default_now(), track=nothing)
         data = Matrix{Union{String, URLTextCell}}(undef, length(talks), 4)
         for (i, talk) in enumerate(talks)
             data[i, 1] = talk.start
-            data[i, 2] = URLTextCell(talk.title, talk.url)
+            data[i, 2] = terminal_links ? URLTextCell(talk.title, talk.url) : talk.title
             data[i, 3] = abbrev(talk.type)
             data[i, 4] = speakers2str(talk.speaker)
         end
