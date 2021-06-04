@@ -41,7 +41,7 @@ When it is needed, the package fetches the JuliaCon schedule (`schedule.json`) f
 
 If fetching the `schedule.json` takes longer than 5 seconds - you can change this default by setting the env variable `JULIACON_TIMEOUT` - the package will fall back to using the last cached version (which might be stale).
 
-You can set the env variable `JULIACON_CACHE_DIR` to specify the location of the cache, i.e. where the `schedule.json` will be stored.
+As per default, the location of the cache is `.julia/datadeps/JuliaConSchedule`. You can set the env variable `JULIACON_CACHE_DIR` to change this default.
 
 #### Cache modes
 
