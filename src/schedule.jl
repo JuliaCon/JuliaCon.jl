@@ -161,22 +161,7 @@ function get_today(; now=default_now())
         return nothing
     end
 
-    d = jcon.days[dayidx]
-
-    schedule = Vector{Tuple{String,Matrix{String}}}(undef, length(d.tracks))
-    i = 1
-    for track in d.tracks
-        timetable = Matrix{String}(undef, length(track.talks), 5)
-        for (j, talk) in enumerate(track.talks)
-            timetable[j, 1] = talk.start
-            timetable[j, 2] = talk.title
-            timetable[j, 3] = abbrev(talk.type) # string(talk.type)
-            timetable[j, 4] = speakers2str(talk.speaker)
-            timetable[j, 5] = talk.duration
-        end
-        schedule[i] = (track.name, timetable)
-        i += 1
-    end
+    schedule = [(track.name, track.talks) for track in jcon.days[dayidx].tracks]
     return schedule
 end
 
@@ -189,12 +174,19 @@ function today(; now=default_now(), track=nothing)
     header_crayon = crayon"dark_gray bold"
     border_crayon = crayon"dark_gray"
     h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
-    for (tr, sched) in track_schedules
+    for (tr, talks) in track_schedules
         !isnothing(track) && tr != track && continue
-        h_current = _get_current_talk_highlighter(sched; now=now)
+        h_current = _get_current_talk_highlighter(talks; now=now)
         println()
+        data = Matrix{Union{String, URLTextCell}}(undef, length(talks), 4)
+        for (i, talk) in enumerate(talks)
+            data[i, 1] = talk.start
+            data[i, 2] = URLTextCell(talk.title, talk.url)
+            data[i, 3] = abbrev(talk.type)
+            data[i, 4] = speakers2str(talk.speaker)
+        end
         pretty_table(
-            @view sched[:, 1:4];
+            data;
             title=tr,
             title_crayon=Crayon(; foreground=_track2color(tr), bold=true),
             header=header,
@@ -223,10 +215,10 @@ function today(; now=default_now(), track=nothing)
     return nothing
 end
 
-function _get_current_talk_highlighter(sched; now=default_now())
-    for (i, talk) in enumerate(eachrow(sched))
-        start_time = Time(talk[1])
-        dur = Time(talk[5])
+function _get_current_talk_highlighter(talks; now=default_now())
+    for (i, talk) in enumerate(talks)
+        start_time = Time(talk.start)
+        dur = Time(talk.duration)
         end_time = start_time + Hour(dur) + Minute(dur)
         if start_time <= Time(now) <= end_time
             return Highlighter((data, m, n) -> m == i, crayon"yellow")
