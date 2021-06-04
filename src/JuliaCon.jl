@@ -14,7 +14,6 @@ include("preferences.jl")
 include("countries.jl")
 include("tshirtcode.jl")
 include("schedule.jl")
-include("debug.jl")
 
 function __init__()
     if isdefined(Main, :Distributed)
