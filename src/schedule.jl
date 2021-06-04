@@ -1,3 +1,5 @@
+is_schedule_json_available() = isfile(joinpath(CACHE_DIR, "schedule.json"))
+
 """
 Get the conference schedule as a nested JSON object.
 On first call, the schedule is downloaded from Pretalx and cached for further usage.
