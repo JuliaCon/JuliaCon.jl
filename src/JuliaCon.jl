@@ -11,6 +11,7 @@ using TimerOutputs
 
 # remove once PrettyTables has a new tagged release
 if !(@isdefined URLTextCell)
+    struct URLTextCell end
     URLTextCell(x,y) = return x
 end
 
