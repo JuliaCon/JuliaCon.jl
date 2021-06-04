@@ -1,3 +1,5 @@
+is_schedule_json_available() = isfile(joinpath(CACHE_DIR, "schedule.json"))
+
 """
 Get the conference schedule as a nested JSON object.
 On first call, the schedule is downloaded from Pretalx and cached for further usage.
@@ -5,6 +7,65 @@ On first call, the schedule is downloaded from Pretalx and cached for further us
 function get_conference_schedule()
     isassigned(jcon) || update_schedule()
     return jcon[]
+end
+
+"""
+    update_schedule(; verbose=false, ignore_timeout=false)
+
+Explicitly trigger a schedule update according to the specified CACHE_MODE.
+"""
+function update_schedule(; verbose=false, notimeout=false)
+    local file
+    to = TimerOutput()
+    verbose && @info "Cache mode: $CACHE_MODE"
+    usecache = CACHE_MODE != :NEVER
+    download_dir = usecache ? CACHE_DIR : mktempdir()
+
+    if CACHE_MODE != :ALWAYS
+        verbose && @info "Downloading $(default_json_url()) to $download_dir"
+        if usecache && !isdir(CACHE_DIR)
+            verbose && @info "Cache directory $CACHE_DIR created."
+            mkpath(CACHE_DIR)
+        end
+
+        timeout =
+            (usecache && is_schedule_json_available()) ? (!notimeout ? TIMEOUT : Inf) : Inf
+        verbose && @info "Timeout set to $timeout seconds."
+
+        try
+            @timeit to "download" file = download(
+                default_json_url(), joinpath(download_dir, "schedule.json.tmp"); timeout
+            )
+            file = mv(
+                joinpath(download_dir, "schedule.json.tmp"),
+                joinpath(download_dir, "schedule.json");
+                force=true,
+            )
+        catch err
+            if usecache
+                @warn "Download failed or timed out. Falling back to cached schedule (might be stale). " *
+                      "You can try forcing matters with JuliaCon.update_schedule(notimeout=true) or " *
+                      "skipping the update altogether via ENV[\"JULIACON_CACHE_MODE\"] = \"ALWAYS\"."
+                file = joinpath(CACHE_DIR, "schedule.json")
+            else
+                error(
+                    "Download failed. Not using the cache due to CACHE_MODE = $CACHE_MODE."
+                )
+            end
+        end
+    else
+        verbose && @info "Loading cached schedule.json"
+        is_schedule_json_available() || error(
+            "Can't find cached schedule.json. Not downloading due to CACHE_MODE = $CACHE_MODE.",
+        )
+        file = joinpath(CACHE_DIR, "schedule.json")
+    end
+
+    @timeit to "parse2json" data = JSON.parsefile(file)
+    @timeit to "json2struct" jcon[] = json2struct(data["schedule"]["conference"])
+
+    verbose && @info string("Timings:\n", to)
+    return nothing
 end
 
 """

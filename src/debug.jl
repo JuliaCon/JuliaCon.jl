@@ -25,25 +25,3 @@ function set_json_source(src::Symbol)
     end
     return nothing
 end
-
-"""
-Explicitly trigger a schedule update.
-"""
-function update_schedule()
-    local file
-    try
-        file = download(default_json_url())
-    catch err
-        error("Couldn't download schedule.json from $(default_json_url()).")
-        println(err)
-    end
-
-    try
-        data = JSON.parsefile(file)
-        jcon[] = json2struct(data["schedule"]["conference"])
-    catch err
-        error("Couldn't parse JSON schedule.")
-        println(err)
-    end
-    return nothing
-end
