@@ -45,7 +45,7 @@ As per default, the location of the cache is `.julia/datadeps/JuliaConSchedule`.
 
 #### Cache modes
 
-There are three cache modes: `DEFAULT"`, `NEVER`, `ALWAYS`. You can switch between them by setting the env variable `JULIACON_CACHE_MODE` appropriately.
+There are three cache modes: `DEFAULT`, `NEVER`, `ALWAYS`. You can switch between them by setting the env variable `JULIACON_CACHE_MODE` appropriately.
 
 * `DEFAULT`: As described above: tries to download / update the schedule and falls back to the cache if necessary.
 * `NEVER`: The cache will never be used / created. If the download fails it fails.
