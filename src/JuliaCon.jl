@@ -14,7 +14,6 @@ include("tshirtcode.jl")
 include("schedule_structs.jl")
 include("schedule.jl")
 include("debug.jl")
-include("caching.jl")
 
 const PRETALX_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
 const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2020_schedule/schedule.json"
