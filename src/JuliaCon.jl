@@ -9,12 +9,6 @@ using Downloads: download
 using PrettyTables
 using TimerOutputs
 
-# remove once PrettyTables has a new tagged release
-if !(@isdefined URLTextCell)
-    struct URLTextCell end
-    URLTextCell(x,y) = return x
-end
-
 include("schedule_structs.jl")
 include("preferences.jl")
 include("countries.jl")
