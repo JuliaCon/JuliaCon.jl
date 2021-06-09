@@ -1,7 +1,7 @@
 const CACHE_MODE = Symbol(uppercase(@load_preference("cache_mode", "DEFAULT")))
 const CACHE_DIR = @load_preference("cache_dir", joinpath(DEPOT_PATH[1], "datadeps", "JuliaConSchedule"))
-const TIMEOUT = @load_preference("timeout", 5.0)
-const TERMINAL_LINKS = @load_preference("terminal_links", false)
+const TIMEOUT = parse(Float64, @load_preference("timeout", "5.0"))
+const TERMINAL_LINKS = parse(Bool, @load_preference("terminal_links", "false"))
 
 function set_cachemode(mode::Symbol)
     @assert mode in (:DEFAULT, :NEVER, :ALWAYS)
@@ -9,16 +9,16 @@ function set_cachemode(mode::Symbol)
     @info("New cache mode set; restart your Julia session for this change to take effect!")
 end
 function set_cachedir(path::String)
-    @set_preferences!("cache_dir" => string(mode))
+    @set_preferences!("cache_dir" => string(path))
     @info("New cache dir set; restart your Julia session for this change to take effect!")
 end
-function set_timeout(val::Float64)
+function set_timeout(val::Union{Float64, Int})
     @assert val > 0
-    @set_preferences!("timeout" => vals)
+    @set_preferences!("timeout" => string(val))
     @info("New timeout set; restart your Julia session for this change to take effect!")
 end
 function set_terminallinks(on::Bool)
-    @set_preferences!("terminal_links" => val)
+    @set_preferences!("terminal_links" => string(on))
     @info("New terminal links preference set; restart your Julia session for this change to take effect!")
 end
 
