@@ -38,7 +38,7 @@ JuliaCon.today()
 
 ### Terminal links
 
-Wouldn't it be nice if one could click on talk titles in the schedule table and jump to the webpage of the respective talk? Some terminals, such as iTerm2 and GNOME Terminal, support the displaying of [terminal-hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) (clickable without printing the URL). We use this terminal feature to indeed make the talk titles clickable! The only thing you need to call `JuliaCon.today(; terminal_links=true)`. If you like what you see, you can use `JuliaCon.set_terminallinks(true)` to set a permanent default.
+Wouldn't it be nice if one could click on talk titles in the schedule table and jump to the webpage of the respective talk? Some terminals, such as iTerm2 and GNOME Terminal, support the displaying of [terminal-hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) (clickable without printing the URL). We use this terminal feature to indeed make the talk titles clickable! The only thing you need to do is call `JuliaCon.today(; terminal_links=true)`. If you like what you see, you can use `JuliaCon.set_terminallinks(true)` to set a permanent default.
 
 ### Caching
 
