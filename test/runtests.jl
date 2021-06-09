@@ -51,6 +51,7 @@ import Dates
         @test isnothing(JuliaCon.today())
         @test isnothing(JuliaCon.today())
         @test isnothing(JuliaCon.today(track="BoF"))
+        @test isnothing(JuliaCon.today(terminal_links=true))
         JuliaCon.debugmode(false)
     end
 
