@@ -146,11 +146,31 @@ function _print_running_talks(current_talks; now=default_now())
     return nothing
 end
 
-function now(; now=default_now())
+function now(::Val{:text}; now)
+    current_talks = get_running_talks(; now=now)
+    str = ""
+    if !isnothing(current_talks)
+        for (track, talk) in current_talks
+            str *= """
+            $track
+            \t$(talk.title) ($(talk.type))
+            \t├─ $(JuliaCon.speakers2str(talk.speaker))
+            \t└─ $(talk.url)
+            """
+        end
+    end
+    str *= "\n(Full schedule: https://pretalx.com/juliacon2021/schedule)"
+    return str
+end
+
+function now(::Val{:terminal}; now)
     current_talks = get_running_talks(; now=now)
     _print_running_talks(current_talks; now=now)
     return nothing
 end
+
+# A dispatcher for the `now` methods. Default to terminal output.
+now(; now=default_now(), output=:terminal) = JuliaCon.now(Val(output); now=now)
 
 function get_today(; now=default_now())
     jcon = get_conference_schedule()
@@ -167,36 +187,41 @@ end
 
 speakers2str(speaker::Vector{String}) = join(speaker, ", ")
 
-function today(; now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS)
-    track_schedules = get_today(; now=now)
-    isnothing(track_schedules) && return nothing
-    header = (["Time", "Title", "Type", "Speaker"],)
-    header_crayon = crayon"dark_gray bold"
-    border_crayon = crayon"dark_gray"
-    h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
-    for (tr, talks) in track_schedules
-        !isnothing(track) && tr != track && continue
-        h_current = _get_current_talk_highlighter(talks; now=now)
-        println()
-        data = Matrix{Union{String, URLTextCell}}(undef, length(talks), 4)
-        for (i, talk) in enumerate(talks)
-            data[i, 1] = talk.start
-            data[i, 2] = terminal_links ? URLTextCell(talk.title, talk.url) : talk.title
-            data[i, 3] = abbrev(talk.type)
-            data[i, 4] = speakers2str(talk.speaker)
-        end
-        pretty_table(
-            data;
-            title=tr,
-            title_crayon=Crayon(; foreground=_track2color(tr), bold=true),
-            header=header,
-            header_crayon=header_crayon,
-            border_crayon=border_crayon,
-            highlighters=(h_times, h_current),
-            tf=tf_unicode_rounded,
-            alignment=[:c, :l, :c, :l],
-        )
-    end
+function today_tables_output(
+    data, tr, header, header_crayon, border_crayon, h_times, h_current, ::Val{:terminal}
+)
+    pretty_table(
+        data;
+        title=tr,
+        title_crayon=Crayon(; foreground=_track2color(tr), bold=true),
+        header=header,
+        header_crayon=header_crayon,
+        border_crayon=border_crayon,
+        highlighters=(h_times, h_current),
+        tf=tf_unicode_rounded,
+        alignment=[:c, :l, :c, :l],
+    )
+    return nothing
+end
+
+function today_tables_output(
+    data, tr, header, header_crayon, border_crayon, h_times, h_current, ::Val{:text}
+)
+    return pretty_table(
+        String,
+        data;
+        title=tr,
+        title_crayon=Crayon(; foreground=_track2color(tr), bold=true),
+        header=header,
+        header_crayon=header_crayon,
+        border_crayon=border_crayon,
+        highlighters=(h_times, h_current),
+        tf=tf_unicode_rounded,
+        alignment=[:c, :l, :c, :l],
+    )
+end
+
+function today_legend(::Val{:terminal})
     println()
     printstyled("Currently running talks are highlighted in ")
     printstyled("yellow"; color=:yellow)
@@ -212,6 +237,65 @@ function today(; now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS
     println(abbrev(BoF), " = Birds of Feather")
     println()
     println("Check out https://pretalx.com/juliacon2021/schedule for more information.")
+    return nothing
+end
+
+function today_legend(::Val{:text})
+    legend = """
+    Currently running talks are highlighted in yellow (or not cause WIP).
+
+    $(JuliaCon.abbrev(JuliaCon.Talk)) = Talk, $(JuliaCon.abbrev(JuliaCon.LightningTalk)) = Lightning Talk, $(JuliaCon.abbrev(JuliaCon.SponsorTalk)) = Sponsor Talk, $(JuliaCon.abbrev(JuliaCon.Keynote)) = Keynote,
+    $(JuliaCon.abbrev(JuliaCon.Workshop)) = Workshop, $(JuliaCon.abbrev(JuliaCon.Minisymposia)) = Minisymposia, $(JuliaCon.abbrev(JuliaCon.BoF)) = Birds of Feather
+
+    Check out https://pretalx.com/juliacon2021/schedule for more information.
+    """
+    return legend
+end
+
+# A dispatcher for the `today` methods. Default to terminal output.
+function today(;
+    now=default_now(),
+    track=nothing,
+    terminal_links=TERMINAL_LINKS,
+    output=:terminal, # can take the :text value to output a Vector{String}
+)
+    track_schedules = get_today(; now=now)
+    isnothing(track_schedules) && return nothing
+    header = (["Time", "Title", "Type", "Speaker"],)
+    header_crayon = crayon"dark_gray bold"
+    border_crayon = crayon"dark_gray"
+    h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
+
+    strings = Vector{String}()
+    header = (["Time", "Title", "Type", "Speaker"],)
+    for (tr, talks) in track_schedules
+        !isnothing(track) && tr != track && continue
+        h_current = _get_current_talk_highlighter(talks; now=now)
+        data = Matrix{Union{String,URLTextCell}}(undef, length(talks), 4)
+        for (i, talk) in enumerate(talks)
+            data[i, 1] = talk.start
+            data[i, 2] = terminal_links ? URLTextCell(talk.title, talk.url) : talk.title
+            data[i, 3] = JuliaCon.abbrev(talk.type)
+            data[i, 4] = JuliaCon.speakers2str(talk.speaker)
+        end
+        string_or_nothing = today_tables_output(
+            data,
+            tr,
+            header,
+            header_crayon,
+            border_crayon,
+            h_times,
+            h_current,
+            Val(output),
+        )
+        isnothing(string_or_nothing) || push!(strings, string_or_nothing)
+    end
+
+    string_or_nothing = today_legend(Val(output))
+    if !isnothing(string_or_nothing)
+        push!(strings, string_or_nothing)
+        return strings
+    end
     return nothing
 end
 

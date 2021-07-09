@@ -16,7 +16,7 @@ import Dates
             rmprocs(workers())
         end
     end
-    
+
     @testset "Preferences" begin
         @testset "Debug mode" begin
             fakenow = Dates.DateTime("2020-07-29T16:30:00.000")
@@ -46,12 +46,31 @@ import Dates
         @test isassigned(JuliaCon.jcon)
 
         JuliaCon.debugmode()
+
+        # output to terminal
+        println("\n")
+        @info "Testing output to terminal"
         @test isnothing(JuliaCon.now())
         @test isnothing(JuliaCon.now())
         @test isnothing(JuliaCon.today())
         @test isnothing(JuliaCon.today())
         @test isnothing(JuliaCon.today(track="BoF"))
         @test isnothing(JuliaCon.today(terminal_links=true))
+
+        # output to text (Vector{Sting})
+        println("\n")
+        @info "Testing output to text, i.e. string(s)"
+
+        ## Print output
+        foreach(println, JuliaCon.today(output = :text))
+        println(JuliaCon.now(output = :text))
+        println(juliacon2021(output = :text))
+
+        ## Test output types
+        @test eltype(JuliaCon.today(output = :text)) == String
+        @test typeof(JuliaCon.now(output = :text)) == String
+        @test typeof(juliacon2021(output = :text)) == String
+
         JuliaCon.debugmode(false)
     end
 
