@@ -91,7 +91,9 @@ Returns a vector of tuples of the type `(track::String, talk::JuliaConTalk)`.
 function _find_current_talks_on_day(
     d::JuliaConDay; now=default_now()
 )::Vector{Tuple{String,JuliaConTalk}}
-    query_result = Vector{Tuple{String,Union{Nothing,JuliaConTalk}}}(undef, length(d.tracks))
+    query_result = Vector{Tuple{String,Union{Nothing,JuliaConTalk}}}(
+        undef, length(d.tracks)
+    )
     for (i, track) in enumerate(d.tracks)
         query_result[i] = (track.name, _find_current_talk_in_track(track; now=now))
     end
@@ -235,7 +237,9 @@ function _get_today_tables(;
 end
 
 function _jcontime_to_localtime(t)
-    jcon_datetime = ZonedDateTime(DateTime(TimeZones.today(JULIACON_TIMEZONE), t), JULIACON_TIMEZONE)
+    jcon_datetime = ZonedDateTime(
+        DateTime(TimeZones.today(JULIACON_TIMEZONE), t), JULIACON_TIMEZONE
+    )
     local_datetime = astimezone(jcon_datetime, localzone())
     return Time(local_datetime)
 end
