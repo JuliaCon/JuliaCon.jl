@@ -4,8 +4,10 @@ struct SponsorTalk <: JuliaConTalkType end
 struct Talk <: JuliaConTalkType end
 struct Keynote <: JuliaConTalkType end
 struct BoF <: JuliaConTalkType end
-struct Minisymposia <: JuliaConTalkType end
+struct Minisymposium <: JuliaConTalkType end
 struct Workshop <: JuliaConTalkType end
+struct Experience <: JuliaConTalkType end
+struct VirtualPoster <: JuliaConTalkType end
 
 struct JuliaConTalk{T<:JuliaConTalkType}
     start::String
@@ -76,18 +78,22 @@ end
 function talktype_from_str(str)
     if str == "Talk"
         return Talk()
-    elseif str == "Lightning Talk"
+    elseif str == "Lightning talk"
         return LightningTalk()
     elseif str == "Sponsor Talk"
         return SponsorTalk()
     elseif str == "Keynote"
         return Keynote()
-    elseif str == "Birds of Feather"
+    elseif str == "Birds of Feather" || str == "BoF (45 mins)"
         return BoF()
-    elseif str == "Minisymposia"
-        return Minisymposia()
+    elseif str == "Minisymposium"
+        return Minisymposium()
     elseif contains(str, "Workshop")
         return Workshop()
+    elseif contains(str, "Experience")
+        return Experience()
+    elseif contains(str, "Virtual Poster")
+        return VirtualPoster()
     else
         error("Unknown JuliaCon talk type \"$str\".")
     end
@@ -122,20 +128,24 @@ function show(io::IO, ::MIME"text/plain", x::JuliaConTalk{T}) where {T<:JuliaCon
     return print(io, "└ URL: ", x.url)
 end
 
-show(io::IO, x::LightningTalk) = print(io, "Lightning Talk")
-show(io::IO, x::SponsorTalk) = print(io, "Sponsor Talk")
-show(io::IO, x::Talk) = print(io, "Talk")
-show(io::IO, x::Keynote) = print(io, "Keynote")
-show(io::IO, x::BoF) = print(io, "Birds of Feather")
-show(io::IO, x::Minisymposia) = print(io, "Minisymposia")
-show(io::IO, x::Workshop) = print(io, "Workshop")
+string(x::LightningTalk) = "Lightning Talk"
+string(x::SponsorTalk) = "Sponsor Talk"
+string(x::Talk) = "Talk"
+string(x::Keynote) = "Keynote"
+string(x::BoF) = "Birds of Feather"
+string(x::Minisymposium) = "Minisymposium"
+string(x::Workshop) = "Workshop"
+string(x::Experience) = "Experience"
+string(x::VirtualPoster) = "Virtual Poster"
 
 abbrev(::Type{LightningTalk}) = "L"
 abbrev(::Type{SponsorTalk}) = "S"
 abbrev(::Type{Talk}) = "T"
 abbrev(::Type{Keynote}) = "K"
 abbrev(::Type{BoF}) = "BoF"
-abbrev(::Type{Minisymposia}) = "M"
+abbrev(::Type{Minisymposium}) = "M"
 abbrev(::Type{Workshop}) = "W"
+abbrev(::Type{Experience}) = "E"
+abbrev(::Type{VirtualPoster}) = "P"
 
 abbrev(x::JuliaConTalkType) = abbrev(typeof(x))

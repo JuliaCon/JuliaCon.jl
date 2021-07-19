@@ -2,6 +2,7 @@ using JuliaCon
 using Test
 using Distributed
 import Dates
+using TimeZones
 
 @testset "JuliaCon.jl" begin
     @testset "juliacon2021()" begin
@@ -19,7 +20,7 @@ import Dates
 
     @testset "Preferences" begin
         @testset "Debug mode" begin
-            fakenow = Dates.DateTime("2020-07-29T16:30:00.000")
+            fakenow = ZonedDateTime(Dates.DateTime("2021-07-28T19:10:00.000"), tz"MET")
             @test JuliaCon.default_now() != fakenow
             @test isnothing(JuliaCon.debugmode())
             @test JuliaCon.default_now() == fakenow

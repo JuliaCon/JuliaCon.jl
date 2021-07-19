@@ -2,6 +2,7 @@ const CACHE_MODE = Symbol(uppercase(@load_preference("cache_mode", "DEFAULT")))
 const CACHE_DIR = @load_preference("cache_dir", joinpath(DEPOT_PATH[1], "datadeps", "JuliaConSchedule"))
 const TIMEOUT = parse(Float64, @load_preference("timeout", "5.0"))
 const TERMINAL_LINKS = parse(Bool, @load_preference("terminal_links", "false"))
+const JULIACON_TIMEZONE = tz"UTC"
 
 function set_cachemode(mode::Symbol)
     @assert mode in (:DEFAULT, :NEVER, :ALWAYS)
@@ -22,12 +23,12 @@ function set_terminallinks(on::Bool)
     @info("New terminal links preference set; restart your Julia session for this change to take effect!")
 end
 
-const PRETALX_JSON_URL = "https://pretalx.com/juliacon2020/schedule/export/schedule.json"
-const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2020_schedule/schedule.json"
+const PRETALX_JSON_URL = "https://pretalx.com/juliacon2021/schedule/export/schedule.json"
+const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2021_schedule/schedule.json"
 const jcon = Ref{JuliaConSchedule}()
 
 default_json_url() = DATA_ARCHIVE_JSON_URL
-default_now() = Dates.now()
+default_now() = TimeZones.now(localzone())
 
 """
     debugmode(on::Bool=true)
@@ -36,9 +37,11 @@ Simulates that we are live / in the middle of JuliaCon.
 """
 function debugmode(on::Bool=true)
     if on
-        @eval JuliaCon default_now() = Dates.DateTime("2020-07-29T16:30:00.000") # JuliaCon2020
+        # @eval JuliaCon default_now() = ZonedDateTime(Dates.DateTime("2021-07-20T18:00:00.000"), tz"MET") # JuliaCon2021 workshops
+        # @eval JuliaCon default_now() = ZonedDateTime(Dates.DateTime("2021-07-30T22:00:00.000"), tz"MET") # JuliaCon2021 posters
+        @eval JuliaCon default_now() = ZonedDateTime(Dates.DateTime("2021-07-28T19:10:00.000"), tz"MET") # JuliaCon2021
     else
-        @eval JuliaCon default_now() = Dates.now()
+        @eval JuliaCon default_now() = TimeZones.now(localzone())
     end
     return nothing
 end

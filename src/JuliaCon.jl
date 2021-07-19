@@ -1,9 +1,10 @@
 module JuliaCon
 
-import Base: show
+import Base: string
 using Preferences
 using Distributed
 using Dates: Dates, Date, DateTime, Time, Hour, Minute
+using TimeZones
 using JSON
 using Downloads: download
 using PrettyTables

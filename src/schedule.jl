@@ -73,10 +73,10 @@ Given a track (i.e. a fixed day), it finds the talks that are running now (it on
 """
 function _find_current_talk_in_track(track::JuliaConTrack; now=default_now())
     for talk in track.talks
-        start_time = Time(talk.start)
+        start_time = Time(talk.start) # time in UTC
         dur = Time(talk.duration)
         end_time = start_time + Hour(dur) + Minute(dur)
-        if start_time <= Time(now) <= end_time
+        if start_time <= Time(_datetime_to_utc(now)) < end_time
             return talk
         end
     end
@@ -91,7 +91,7 @@ Returns a vector of tuples of the type `(track::String, talk::JuliaConTalk)`.
 function _find_current_talks_on_day(
     d::JuliaConDay; now=default_now()
 )::Vector{Tuple{String,JuliaConTalk}}
-    query_result = Vector{Tuple{String,JuliaConTalk}}(undef, length(d.tracks))
+    query_result = Vector{Tuple{String,Union{Nothing,JuliaConTalk}}}(undef, length(d.tracks))
     for (i, track) in enumerate(d.tracks)
         query_result[i] = (track.name, _find_current_talk_in_track(track; now=now))
     end
@@ -101,14 +101,14 @@ end
 function get_running_talks(; now=default_now())
     jcon = get_conference_schedule()
 
-    dayidx = findfirst(d -> d.date == Date(now), jcon.days)
+    dayidx = findfirst(d -> d.date == Date(_datetime_to_utc(now)), jcon.days)
     if isnothing(dayidx)
         @info "There is no JuliaCon program today!"
         return nothing
     end
 
     d = jcon.days[dayidx]
-    if !(d.start <= now <= d.stop)
+    if !(d.start <= DateTime(_datetime_to_utc(now)) <= d.stop)
         @info "There is no JuliaCon program now!"
         return nothing
     end
@@ -118,12 +118,14 @@ function get_running_talks(; now=default_now())
 end
 
 function _track2color(track::String)
-    if track == "Red Track"
+    if track == "Red"
         return :red
-    elseif track == "Green Track"
+    elseif track == "Green"
         return :green
-    elseif track == "Purple Track"
+    elseif track == "Purple"
         return :magenta
+    elseif track == "Blue"
+        return :blue
     else
         return :default
     end
@@ -137,7 +139,7 @@ function _print_running_talks(current_talks; now=default_now())
         println()
         printstyled(track; bold=true, color=_track2color(track))
         println()
-        println("\t", talk.title, " (", talk.type, ")")
+        println("\t", talk.title, " (", string(talk.type), ")")
         println("\t", "├─ ", speakers2str(talk.speaker))
         println("\t", "└─ ", talk.url)
     end
@@ -153,7 +155,7 @@ function now(::Val{:text}; now)
         for (track, talk) in current_talks
             str *= """
             $track
-            \t$(talk.title) ($(talk.type))
+            \t$(talk.title) ($(string(talk.type)))
             \t├─ $(JuliaCon.speakers2str(talk.speaker))
             \t└─ $(talk.url)
             """
@@ -175,7 +177,7 @@ now(; now=default_now(), output=:terminal) = JuliaCon.now(Val(output); now=now)
 function get_today(; now=default_now())
     jcon = get_conference_schedule()
 
-    dayidx = findfirst(d -> d.date == Date(now), jcon.days)
+    dayidx = findfirst(d -> d.date == Date(_datetime_to_utc(now)), jcon.days)
     if isnothing(dayidx)
         @info "There is no JuliaCon program today!"
         return nothing
@@ -187,16 +189,19 @@ end
 
 speakers2str(speaker::Vector{String}) = join(speaker, ", ")
 
+_datetime_to_utc(t::ZonedDateTime) = astimezone(t, JULIACON_TIMEZONE)
+_datetime_to_utc(t) = ZonedDateTime(t, JULIACON_TIMEZONE)
+
 function _get_current_talk_highlighter(talks; now=default_now())
     for (i, talk) in enumerate(talks)
         start_time = Time(talk.start)
         dur = Time(talk.duration)
         end_time = start_time + Hour(dur) + Minute(dur)
-        if start_time <= Time(now) <= end_time
+        if start_time <= Time(_datetime_to_utc(now)) < end_time
             return Highlighter((data, m, n) -> m == i, crayon"yellow")
         end
     end
-    return nothing
+    return Highlighter((data, m, n) -> false, crayon"yellow")
 end
 
 function _get_today_tables(;
@@ -214,7 +219,7 @@ function _get_today_tables(;
 
         data = Matrix{Union{String,URLTextCell}}(undef, length(talks), 4)
         for (i, talk) in enumerate(talks)
-            data[i, 1] = talk.start
+            data[i, 1] = Dates.format(_jcontime_to_localtime(Time(talk.start)), "HH:MM")
             data[i, 2] = terminal_links ? URLTextCell(talk.title, talk.url) : talk.title
             data[i, 3] = JuliaCon.abbrev(talk.type)
             data[i, 4] = JuliaCon.speakers2str(talk.speaker)
@@ -227,6 +232,12 @@ function _get_today_tables(;
 
     @assert length(tables) == length(highlighters) == length(tracks)
     return (tracks, tables, highlighters)
+end
+
+function _jcontime_to_localtime(t)
+    jcon_datetime = ZonedDateTime(DateTime(TimeZones.today(JULIACON_TIMEZONE), t), JULIACON_TIMEZONE)
+    local_datetime = astimezone(jcon_datetime, localzone())
+    return Time(local_datetime)
 end
 
 # A dispatcher for the `today` methods. Defaults to terminal output.
@@ -277,8 +288,10 @@ function today(::Val{:terminal}; now, track, terminal_links)
     print(abbrev(SponsorTalk), " = Sponsor Talk, ")
     println(abbrev(Keynote), " = Keynote, ")
     print(abbrev(Workshop), " = Workshop, ")
-    print(abbrev(Minisymposia), " = Minisymposia, ")
-    println(abbrev(BoF), " = Birds of Feather")
+    print(abbrev(Minisymposium), " = Minisymposium, ")
+    println(abbrev(BoF), " = Birds of Feather, ")
+    print(abbrev(Experience), " = Experience, ")
+    println(abbrev(VirtualPoster), " = Virtual Poster")
     println()
     println("Check out https://pretalx.com/juliacon2021/schedule for more information.")
     return nothing
@@ -317,7 +330,7 @@ function today(::Val{:text}; now, track, terminal_links)
     Currently running talks are highlighted in yellow (or not cause WIP).
 
     $(JuliaCon.abbrev(JuliaCon.Talk)) = Talk, $(JuliaCon.abbrev(JuliaCon.LightningTalk)) = Lightning Talk, $(JuliaCon.abbrev(JuliaCon.SponsorTalk)) = Sponsor Talk, $(JuliaCon.abbrev(JuliaCon.Keynote)) = Keynote,
-    $(JuliaCon.abbrev(JuliaCon.Workshop)) = Workshop, $(JuliaCon.abbrev(JuliaCon.Minisymposia)) = Minisymposia, $(JuliaCon.abbrev(JuliaCon.BoF)) = Birds of Feather
+    $(JuliaCon.abbrev(JuliaCon.Workshop)) = Workshop, $(JuliaCon.abbrev(JuliaCon.Minisymposium)) = Minisymposium, $(JuliaCon.abbrev(JuliaCon.BoF)) = Birds of Feather
 
     Check out https://pretalx.com/juliacon2021/schedule for more information.
     """
