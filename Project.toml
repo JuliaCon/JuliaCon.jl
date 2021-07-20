@@ -1,7 +1,7 @@
 name = "JuliaCon"
 uuid = "bfca5e61-7ca9-4d61-a82b-6df663fb0d3c"
 authors = ["Carsten Bauer <crstnbr@gmail.com> and contributors"]
-version = "0.4.0"
+version = "2021.0.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
