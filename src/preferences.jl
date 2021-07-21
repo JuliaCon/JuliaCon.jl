@@ -47,7 +47,11 @@ function set_local_timezone(tz::AbstractString)
         return nothing
     end
 end
-reset_local_timezone() = set_local_timezone(string(localzone()))
+function reset_local_timezone()
+    tz = string(localzone())
+    tz = tz == "Etc/UTC" ? "UTC" : tz # Make CI runners happy....
+    set_local_timezone(tz)
+end
 
 const PRETALX_JSON_URL = "https://pretalx.com/juliacon2021/schedule/export/schedule.json"
 const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2021_schedule/schedule.json"
