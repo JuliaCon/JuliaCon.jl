@@ -42,7 +42,7 @@ Wouldn't it be nice if one could click on talk titles in the schedule table and 
 
 ### Time zones
 
-Utilizing TimeZones.jl, we try to respect your local time zone and try to convert all the JuliaCon UTC times appropriately. By default, we will use `TimeZones.localzone()` to figure out your local time zone. But you can also manually set your time zone via `set_local_timezone(tz::AbstractString)`. Note that you need to restart Julia to see the effect of the change.
+Utilizing [TimeZones.jl](https://github.com/JuliaTime/TimeZones.jl), we try to respect your local time zone and try to convert all the JuliaCon UTC times appropriately. By default, we will use `TimeZones.localzone()` to figure out your local time zone. But you can also manually set your time zone via `set_local_timezone(tz::AbstractString)`. Note that you need to restart Julia to see the effect of the change.
 
 ### Caching
 
