@@ -39,6 +39,9 @@ using TimeZones
         @test isnothing(JuliaCon.set_cachedir(homedir()))
         @test isnothing(JuliaCon.set_timeout(10))
         @test isnothing(JuliaCon.set_timeout(10.2))
+        @test isnothing(JuliaCon.set_local_timezone("EST"))
+        @test isnothing(JuliaCon.reset_local_timezone())
+        @test_throws ArgumentError JuliaCon.set_local_timezone("Carsten")
     end
 
     @testset "Schedule" begin
