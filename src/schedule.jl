@@ -221,7 +221,9 @@ function _get_today_tables(;
 
         data = Matrix{Union{String,URLTextCell}}(undef, length(talks), 4)
         for (i, talk) in enumerate(talks)
-            data[i, 1] = Dates.format(_jcontime_to_localtime(Time(talk.start)), "HH:MM")
+            data[i, 1] = Dates.format(
+                _jcontime_to_localtime(Time(talk.start); now), "HH:MM"
+            )
             data[i, 2] = terminal_links ? URLTextCell(talk.title, talk.url) : talk.title
             data[i, 3] = JuliaCon.abbrev(talk.type)
             data[i, 4] = JuliaCon.speakers2str(talk.speaker)
@@ -236,11 +238,13 @@ function _get_today_tables(;
     return (tracks, tables, highlighters)
 end
 
-function _jcontime_to_localtime(t)
+function _jcontime_to_localtime(t; now=default_now())
     jcon_datetime = ZonedDateTime(
         DateTime(TimeZones.today(JULIACON_TIMEZONE), t), JULIACON_TIMEZONE
     )
-    local_datetime = astimezone(jcon_datetime, localzone())
+    local_datetime = astimezone(
+        jcon_datetime, typeof(now) == DateTime ? LOCAL_TIMEZONE : timezone(now)
+    )
     return Time(local_datetime)
 end
 

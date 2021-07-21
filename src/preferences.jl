@@ -5,6 +5,16 @@ const CACHE_DIR = @load_preference(
 const TIMEOUT = parse(Float64, @load_preference("timeout", "5.0"))
 const TERMINAL_LINKS = parse(Bool, @load_preference("terminal_links", "false"))
 const JULIACON_TIMEZONE = tz"UTC"
+const LOCAL_TIMEZONE = begin
+    tzstr = @load_preference("local_timezone", "")
+    if !istimezone(tzstr)
+        @has_preference("local_timezone") &&
+            @warn "Preference \"local_timezone\" isn't a valid timezone. Check out TimeZones.timezone_names() for possible options. Falling back to localzone()."
+        localzone()
+    else
+        TimeZone(tzstr)
+    end
+end
 
 function set_cachemode(mode::Symbol)
     @assert mode in (:DEFAULT, :NEVER, :ALWAYS)
@@ -26,13 +36,26 @@ function set_terminallinks(on::Bool)
         "New terminal links preference set; restart your Julia session for this change to take effect!"
     )
 end
+function set_local_timezone(tz::AbstractString)
+    if !istimezone(tz)
+        @warn "\"$tz\" isn't a valid timezone. Check out TimeZones.timezone_names() for possible options. Aborting."
+        return nothing
+    else
+        @set_preferences!("local_timezone" => tz)
+        @info(
+            "New local timezone set; restart your Julia session for this change to take effect!"
+        )
+        return nothing
+    end
+end
+reset_local_timezone() = set_local_timezone(string(localzone()))
 
 const PRETALX_JSON_URL = "https://pretalx.com/juliacon2021/schedule/export/schedule.json"
 const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2021_schedule/schedule.json"
 const jcon = Ref{JuliaConSchedule}()
 
 default_json_url() = DATA_ARCHIVE_JSON_URL
-default_now() = TimeZones.now(localzone())
+default_now() = TimeZones.now(LOCAL_TIMEZONE)
 
 """
     debugmode(on::Bool=true)
