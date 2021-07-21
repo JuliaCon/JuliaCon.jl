@@ -40,6 +40,10 @@ JuliaCon.today()
 
 Wouldn't it be nice if one could click on talk titles in the schedule table and jump to the webpage of the respective talk? Some terminals, such as iTerm2 and GNOME Terminal, support the displaying of [terminal-hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) (clickable without printing the URL). We use this terminal feature to indeed make the talk titles clickable! The only thing you need to do is call `JuliaCon.today(; terminal_links=true)`. If you like what you see, you can use `JuliaCon.set_terminallinks(true)` to set a permanent default.
 
+### Time zones
+
+Utilizing TimeZones.jl, we try to respect your local time zone and try to convert all the JuliaCon UTC times appropriately. By default, we will use `TimeZones.localzone()` to figure out your local time zone. But you can also manually set your time zone via `set_local_timezone(tz::AbstractString)`. Note that you need to restart Julia to see the effect of the change.
+
 ### Caching
 
 When it is needed, the package fetches the JuliaCon schedule (`schedule.json`) from the [JuliaConDataArchive](https://github.com/JuliaCon/JuliaConDataArchive) and keeps the information in memory for further usage. Hence, by default, the fetching happens once per Julia session. To force an update of the JuliaCon schedule you can call `update_schedule()`.
