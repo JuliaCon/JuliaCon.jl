@@ -207,7 +207,7 @@ function _get_current_talk_highlighter(talks; now=default_now())
 end
 
 function _get_today_tables(;
-    now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS
+    now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS, highlighting=true
 )
     track_schedules = get_today(; now=now)
     isnothing(track_schedules) && return (nothing, nothing, nothing)
@@ -230,7 +230,11 @@ function _get_today_tables(;
         end
         push!(tables, data)
 
-        h_current = _get_current_talk_highlighter(talks; now=now)
+        h_current = if highlighting
+            _get_current_talk_highlighter(talks; now=now)
+        else
+            Highlighter((data, m, n) -> false, crayon"yellow")
+        end
         push!(highlighters, h_current)
     end
 
@@ -259,7 +263,7 @@ function today(;
 end
 
 function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links)
+    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
     header = (["Time", "Title", "Type", "Speaker"],)
@@ -268,7 +272,7 @@ function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
     h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
 
     println()
-    println(TimeZones.Date(now))
+    println(Dates.format(TimeZones.Date(now), "E d U Y"))
 
     for j in eachindex(tracks)
         track = tracks[j]
@@ -311,7 +315,7 @@ function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
 end
 
 function today(::Val{:text}; now, track, terminal_links, highlighting=true)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links)
+    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
     header = (["Time", "Title", "Type", "Speaker"],)
@@ -320,6 +324,7 @@ function today(::Val{:text}; now, track, terminal_links, highlighting=true)
     h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
 
     strings = Vector{String}()
+    push!(strings, string(Dates.format(TimeZones.Date(now), "E d U Y")))
     for j in eachindex(tracks)
         track = tracks[j]
         data = tables[j]
