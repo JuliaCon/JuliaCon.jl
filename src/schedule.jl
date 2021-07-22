@@ -207,7 +207,7 @@ function _get_current_talk_highlighter(talks; now=default_now())
 end
 
 function _get_today_tables(;
-    now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS
+    now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS, highlighting=true
 )
     track_schedules = get_today(; now=now)
     isnothing(track_schedules) && return (nothing, nothing, nothing)
@@ -230,7 +230,11 @@ function _get_today_tables(;
         end
         push!(tables, data)
 
-        h_current = _get_current_talk_highlighter(talks; now=now)
+        h_current = if highlighting
+            _get_current_talk_highlighter(talks; now=now)
+        else
+            Highlighter((data, m, n) -> false, crayon"yellow")
+        end
         push!(highlighters, h_current)
     end
 
@@ -258,14 +262,17 @@ function today(;
     return today(Val(output); now, track, terminal_links)
 end
 
-function today(::Val{:terminal}; now, track, terminal_links)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links)
+function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
+    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
     header = (["Time", "Title", "Type", "Speaker"],)
     header_crayon = crayon"dark_gray bold"
     border_crayon = crayon"dark_gray"
     h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
+
+    println()
+    println(Dates.format(TimeZones.Date(now), "E d U Y"))
 
     for j in eachindex(tracks)
         track = tracks[j]
@@ -286,11 +293,13 @@ function today(::Val{:terminal}; now, track, terminal_links)
     end
 
     println()
-    printstyled("Currently running talks are highlighted in ")
-    printstyled("yellow"; color=:yellow)
-    printstyled(".")
-    println()
-    println()
+    if highlighting
+        printstyled("Currently running talks are highlighted in ")
+        printstyled("yellow"; color=:yellow)
+        printstyled(".")
+        println()
+        println()
+    end
     print(abbrev(Talk), " = Talk, ")
     print(abbrev(LightningTalk), " = Lightning Talk, ")
     print(abbrev(SponsorTalk), " = Sponsor Talk, ")
@@ -305,8 +314,8 @@ function today(::Val{:terminal}; now, track, terminal_links)
     return nothing
 end
 
-function today(::Val{:text}; now, track, terminal_links)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links)
+function today(::Val{:text}; now, track, terminal_links, highlighting=true)
+    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
     header = (["Time", "Title", "Type", "Speaker"],)
@@ -315,6 +324,7 @@ function today(::Val{:text}; now, track, terminal_links)
     h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
 
     strings = Vector{String}()
+    push!(strings, string(Dates.format(TimeZones.Date(now), "E d U Y")))
     for j in eachindex(tracks)
         track = tracks[j]
         data = tables[j]
@@ -334,9 +344,16 @@ function today(::Val{:text}; now, track, terminal_links)
         push!(strings, str)
     end
 
-    legend = """
-    Currently running talks are highlighted in yellow (or not cause WIP).
+    legend = if highlighting
+        """
+        Currently running talks are highlighted in yellow (or not cause WIP).
 
+        """
+    else
+        ""
+    end
+
+    legend *= """
     $(JuliaCon.abbrev(JuliaCon.Talk)) = Talk, $(JuliaCon.abbrev(JuliaCon.LightningTalk)) = Lightning Talk, $(JuliaCon.abbrev(JuliaCon.SponsorTalk)) = Sponsor Talk, $(JuliaCon.abbrev(JuliaCon.Keynote)) = Keynote,
     $(JuliaCon.abbrev(JuliaCon.Workshop)) = Workshop, $(JuliaCon.abbrev(JuliaCon.Minisymposium)) = Minisymposium, $(JuliaCon.abbrev(JuliaCon.BoF)) = Birds of Feather,
     $(JuliaCon.abbrev(JuliaCon.Experience)) = Experience, $(JuliaCon.abbrev(JuliaCon.VirtualPoster)) = Virtual Poster
@@ -345,4 +362,13 @@ function today(::Val{:text}; now, track, terminal_links)
     """
     push!(strings, legend)
     return strings
+end
+
+function tomorrow(;
+    now=default_now(),
+    track=nothing,
+    terminal_links=TERMINAL_LINKS,
+    output=:terminal, # can take the :text value to output a Vector{String}
+)
+    return today(Val(output); now = now + Dates.Day(1), track, terminal_links, highlighting = false)
 end
