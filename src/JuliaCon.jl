@@ -3,14 +3,14 @@ module JuliaCon
 import Base: string
 using Preferences
 using Distributed
-using Dates: Dates, Date, DateTime, Time, Hour, Minute
+using Dates: Dates, Date, DateTime, Day, Time, Hour, Minute, CompoundPeriod
 using TimeZones
 using JSON
 using Downloads: download
 using PrettyTables
 using TimerOutputs
+using DataFrames
 
-include("schedule_structs.jl")
 include("preferences.jl")
 include("countries.jl")
 include("tshirtcode.jl")

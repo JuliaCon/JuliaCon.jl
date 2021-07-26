@@ -16,6 +16,10 @@ const LOCAL_TIMEZONE = begin
     end
 end
 
+const PRETALX_JSON_URL = "https://pretalx.com/juliacon2021/schedule/export/schedule.json"
+const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2021_schedule/schedule.json"
+const jcon = Ref{DataFrame}()
+
 function set_cachemode(mode::Symbol)
     @assert mode in (:DEFAULT, :NEVER, :ALWAYS)
     @set_preferences!("cache_mode" => uppercase(string(mode)))
@@ -53,10 +57,6 @@ function reset_local_timezone()
     set_local_timezone(tz)
 end
 
-const PRETALX_JSON_URL = "https://pretalx.com/juliacon2021/schedule/export/schedule.json"
-const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2021_schedule/schedule.json"
-const jcon = Ref{JuliaConSchedule}()
-
 default_json_url() = DATA_ARCHIVE_JSON_URL
 default_now() = TimeZones.now(LOCAL_TIMEZONE)
 
@@ -71,9 +71,11 @@ function debugmode(on::Bool=true)
         # @eval JuliaCon default_now() = ZonedDateTime(Dates.DateTime("2021-07-30T22:00:00.000"), tz"MET") # JuliaCon2021 posters
         @eval JuliaCon function default_now()
             return ZonedDateTime(Dates.DateTime("2021-07-30T21:30:00.000"), tz"MET")
+            # return ZonedDateTime(Dates.DateTime("2021-07-24T18:15:00.000"), tz"America/Los_Angeles")
+            # return ZonedDateTime(Dates.DateTime("2021-07-24T20:00:00.000"), tz"MET")
         end # JuliaCon2021
     else
-        @eval JuliaCon default_now() = TimeZones.now(localzone())
+        @eval JuliaCon default_now() = TimeZones.now(LOCAL_TIMEZONE)
     end
     return nothing
 end

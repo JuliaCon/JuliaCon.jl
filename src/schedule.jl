@@ -1,7 +1,100 @@
+abstract type JuliaConTalkType end
+struct LightningTalk <: JuliaConTalkType end
+struct SponsorTalk <: JuliaConTalkType end
+struct Talk <: JuliaConTalkType end
+struct Keynote <: JuliaConTalkType end
+struct BoF <: JuliaConTalkType end
+struct Minisymposium <: JuliaConTalkType end
+struct Workshop <: JuliaConTalkType end
+struct Experience <: JuliaConTalkType end
+struct VirtualPoster <: JuliaConTalkType end
+
+function json2df(conf)
+    df = DataFrame(
+        start = ZonedDateTime[],
+        duration = CompoundPeriod[],
+        title = String[],
+        speaker = Vector{String}[],
+        type = JuliaConTalkType[],
+        url = String[],
+        track = String[],
+    )
+
+    for day in conf["days"]
+        date = Date(day["date"])
+        for (track, talks) in day["rooms"]
+            for talk in talks
+                # parse duration
+                tmp = split(talk["duration"], ':')
+                dur = Hour(tmp[1]) + Minute(tmp[2])
+                
+                d = Dict(
+                    :start => ZonedDateTime(DateTime(date, Time(talk["start"])), JULIACON_TIMEZONE),
+                    :duration => dur,
+                    :title => talk["title"],
+                    :speaker => String[p["public_name"] for p in talk["persons"]],
+                    :type => talktype_from_str(talk["type"]),
+                    :url => talk["url"],
+                    :track => track,
+                )
+                push!(df, d)
+            end
+        end
+    end
+    
+    return df
+end
+
+function talktype_from_str(str)
+    if str == "Talk"
+        return Talk()
+    elseif str == "Lightning talk"
+        return LightningTalk()
+    elseif str == "Sponsor Talk"
+        return SponsorTalk()
+    elseif str == "Keynote"
+        return Keynote()
+    elseif str == "Birds of Feather" || str == "BoF (45 mins)"
+        return BoF()
+    elseif str == "Minisymposium"
+        return Minisymposium()
+    elseif contains(str, "Workshop")
+        return Workshop()
+    elseif contains(str, "Experience")
+        return Experience()
+    elseif contains(str, "Virtual Poster")
+        return VirtualPoster()
+    else
+        error("Unknown JuliaCon talk type \"$str\".")
+    end
+end
+
+string(x::LightningTalk) = "Lightning Talk"
+string(x::SponsorTalk) = "Sponsor Talk"
+string(x::Talk) = "Talk"
+string(x::Keynote) = "Keynote"
+string(x::BoF) = "Birds of Feather"
+string(x::Minisymposium) = "Minisymposium"
+string(x::Workshop) = "Workshop"
+string(x::Experience) = "Experience"
+string(x::VirtualPoster) = "Virtual Poster"
+
+abbrev(::Type{LightningTalk}) = "L"
+abbrev(::Type{SponsorTalk}) = "S"
+abbrev(::Type{Talk}) = "T"
+abbrev(::Type{Keynote}) = "K"
+abbrev(::Type{BoF}) = "BoF"
+abbrev(::Type{Minisymposium}) = "M"
+abbrev(::Type{Workshop}) = "W"
+abbrev(::Type{Experience}) = "E"
+abbrev(::Type{VirtualPoster}) = "P"
+
+abbrev(x::JuliaConTalkType) = abbrev(typeof(x))
+
 is_schedule_json_available() = isfile(joinpath(CACHE_DIR, "schedule.json"))
 
 """
-Get the conference schedule as a nested JSON object.
+Get the conference schedule as a DataFrame.
 On first call, the schedule is downloaded from Pretalx and cached for further usage.
 """
 function get_conference_schedule()
@@ -62,61 +155,38 @@ function update_schedule(; verbose=false, notimeout=false)
     end
 
     @timeit to "parse2json" data = JSON.parsefile(file)
-    @timeit to "json2struct" jcon[] = json2struct(data["schedule"]["conference"])
+    @timeit to "json2df" jcon[] = json2df(data["schedule"]["conference"])
 
     verbose && @info string("Timings:\n", to)
     return nothing
 end
 
-"""
-Given a track (i.e. a fixed day), it finds the talks that are running now (it only compares times).
-"""
-function _find_current_talk_in_track(track::JuliaConTrack; now=default_now())
-    for talk in track.talks
-        start_time = Time(talk.start) # time in UTC
-        dur = Time(talk.duration)
-        end_time = start_time + Hour(dur) + Minute(dur)
-        if start_time <= Time(_datetime_to_utc(now)) < end_time
-            return talk
-        end
-    end
-    return nothing
-end
-
-"""
-Given a fixed day, it finds the talks in all tracks that are running now (it only compares times).
-
-Returns a vector of tuples of the type `(track::String, talk::JuliaConTalk)`.
-"""
-function _find_current_talks_on_day(
-    d::JuliaConDay; now=default_now()
-)::Vector{Tuple{String,JuliaConTalk}}
-    query_result = Vector{Tuple{String,Union{Nothing,JuliaConTalk}}}(
-        undef, length(d.tracks)
-    )
-    for (i, track) in enumerate(d.tracks)
-        query_result[i] = (track.name, _find_current_talk_in_track(track; now=now))
-    end
-    return filter(x -> !isnothing(x[2]), query_result)
-end
-
 function get_running_talks(; now=default_now())
     jcon = get_conference_schedule()
 
-    dayidx = findfirst(d -> d.date == Date(_datetime_to_utc(now)), jcon.days)
-    if isnothing(dayidx)
-        @info "There is no JuliaCon program today!"
-        return nothing
+    running_talks = filter(jcon; view=true) do talk
+        start_time = talk.start
+        end_time = start_time + talk.duration
+        return start_time <= astimezone(now, JULIACON_TIMEZONE) < end_time
     end
+    return running_talks
+end
 
-    d = jcon.days[dayidx]
-    if !(d.start <= DateTime(_datetime_to_utc(now)) <= d.stop)
-        @info "There is no JuliaCon program now!"
-        return nothing
+function _print_running_talks(running_talks; now=default_now())
+    nrow(running_talks) > 0 || return nothing
+    # println()
+    # println(Dates.format(default_now(), "HH:MM dd-mm-YYYY"))
+    for talk in eachrow(running_talks)
+        println()
+        printstyled(talk.track; bold=true, color=_track2color(talk.track))
+        println()
+        println("\t", talk.title, " (", string(talk.type), ")")
+        println("\t", "├─ ", _speakers2str(talk.speaker))
+        println("\t", "└─ ", talk.url)
     end
-
-    current_talks = _find_current_talks_on_day(d; now=now)
-    return current_talks
+    println("\n")
+    println("(Full schedule: https://pretalx.com/juliacon2021/schedule)")
+    return nothing
 end
 
 function _track2color(track::String)
@@ -133,32 +203,15 @@ function _track2color(track::String)
     end
 end
 
-function _print_running_talks(current_talks; now=default_now())
-    !isnothing(current_talks) || return nothing
-    # println()
-    # println(Dates.format(default_now(), "HH:MM dd-mm-YYYY"))
-    for (track, talk) in current_talks
-        println()
-        printstyled(track; bold=true, color=_track2color(track))
-        println()
-        println("\t", talk.title, " (", string(talk.type), ")")
-        println("\t", "├─ ", speakers2str(talk.speaker))
-        println("\t", "└─ ", talk.url)
-    end
-    println("\n")
-    println("(Full schedule: https://pretalx.com/juliacon2021/schedule)")
-    return nothing
-end
-
 function now(::Val{:text}; now)
-    current_talks = get_running_talks(; now=now)
+    running_talks = get_running_talks(; now=now)
     str = ""
-    if !isnothing(current_talks)
-        for (track, talk) in current_talks
+    if !isnothing(running_talks)
+        for talk in eachrow(running_talks)
             str *= """
-            $track
+            $(talk.track)
             \t$(talk.title) ($(string(talk.type)))
-            \t├─ $(JuliaCon.speakers2str(talk.speaker))
+            \t├─ $(JuliaCon._speakers2str(talk.speaker))
             \t└─ $(talk.url)
             """
         end
@@ -168,84 +221,74 @@ function now(::Val{:text}; now)
 end
 
 function now(::Val{:terminal}; now)
-    current_talks = get_running_talks(; now=now)
-    _print_running_talks(current_talks; now=now)
+    running_talks = get_running_talks(; now=now)
+    _print_running_talks(running_talks; now=now)
     return nothing
 end
 
 # A dispatcher for the `now` methods. Default to terminal output.
 now(; now=default_now(), output=:terminal) = JuliaCon.now(Val(output); now=now)
 
-function get_today(; now=default_now())
-    jcon = get_conference_schedule()
+_speakers2str(speaker::Vector{String}) = join(speaker, ", ")
 
-    dayidx = findfirst(d -> d.date == Date(_datetime_to_utc(now)), jcon.days)
-    if isnothing(dayidx)
-        @info "There is no JuliaCon program today!"
-        return nothing
-    end
-
-    schedule = [(track.name, track.talks) for track in jcon.days[dayidx].tracks]
-    return schedule
-end
-
-speakers2str(speaker::Vector{String}) = join(speaker, ", ")
-
-_datetime_to_utc(t::ZonedDateTime) = astimezone(t, JULIACON_TIMEZONE)
-_datetime_to_utc(t) = ZonedDateTime(t, JULIACON_TIMEZONE)
-
-function _get_current_talk_highlighter(talks; now=default_now())
-    for (i, talk) in enumerate(talks)
-        start_time = Time(talk.start)
-        dur = Time(talk.duration)
-        end_time = start_time + Hour(dur) + Minute(dur)
-        if start_time <= Time(_datetime_to_utc(now)) < end_time
+function _get_running_talk_highlighter(track_grp; now=default_now())
+    for (i, talk) in enumerate(eachrow(track_grp))
+        start_time = talk.start
+        end_time = talk.start + talk.duration
+        if start_time <= astimezone(now, JULIACON_TIMEZONE) < end_time
             return Highlighter((data, m, n) -> m == i, crayon"yellow")
         end
     end
     return Highlighter((data, m, n) -> false, crayon"yellow")
 end
 
+
 function _get_today_tables(;
     now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS
 )
-    track_schedules = get_today(; now=now)
-    isnothing(track_schedules) && return (nothing, nothing, nothing)
+    jcon = get_conference_schedule()
+    
+    today_start_utc = ZonedDateTime(DateTime(Date(now), Time("00:00")), JULIACON_TIMEZONE)
+    today_end_utc = ZonedDateTime(DateTime(Date(now) + Day(1), Time("00:00")), JULIACON_TIMEZONE)
 
+    talks_today = filter(jcon; view=true) do talk
+        # talk is in the requested track (default: any)
+        if !isnothing(track) && talk.track != track
+            return false
+        end
+
+        # talk starts "today" (local time)
+        return today_start_utc <= talk.start < today_end_utc
+    end
+
+    # no talks today -> exit
+    nrow(talks_today) > 0 || return (nothing, nothing, nothing)
+
+    # create talk tables
     tracks = String[]
     tables = Matrix{Union{String,URLTextCell}}[]
     highlighters = Union{Nothing,Highlighter}[]
-    for (tr, talks) in track_schedules
-        !isnothing(track) && tr != track && continue
-        push!(tracks, tr)
 
-        data = Matrix{Union{String,URLTextCell}}(undef, length(talks), 4)
-        for (i, talk) in enumerate(talks)
-            data[i, 1] = Dates.format(
-                _jcontime_to_localtime(Time(talk.start); now), "HH:MM"
-            )
+    # for each track
+    for track_grp in groupby(talks_today, :track)
+        push!(tracks, first(track_grp).track)
+
+        # build talk-data matrix
+        data = Matrix{Union{String,URLTextCell}}(undef, nrow(track_grp), 4)
+        for (i, talk) in enumerate(eachrow(track_grp))
+            data[i, 1] = Dates.format(astimezone(talk.start, timezone(now)), "HH:MM")
             data[i, 2] = terminal_links ? URLTextCell(talk.title, talk.url) : talk.title
             data[i, 3] = JuliaCon.abbrev(talk.type)
-            data[i, 4] = JuliaCon.speakers2str(talk.speaker)
+            data[i, 4] = JuliaCon._speakers2str(talk.speaker)
         end
         push!(tables, data)
 
-        h_current = _get_current_talk_highlighter(talks; now=now)
-        push!(highlighters, h_current)
+        h_running = _get_running_talk_highlighter(track_grp; now=now)
+        push!(highlighters, h_running)
     end
 
     @assert length(tables) == length(highlighters) == length(tracks)
     return (tracks, tables, highlighters)
-end
-
-function _jcontime_to_localtime(t; now=default_now())
-    jcon_datetime = ZonedDateTime(
-        DateTime(TimeZones.today(JULIACON_TIMEZONE), t), JULIACON_TIMEZONE
-    )
-    local_datetime = astimezone(
-        jcon_datetime, typeof(now) == DateTime ? LOCAL_TIMEZONE : timezone(now)
-    )
-    return Time(local_datetime)
 end
 
 # A dispatcher for the `today` methods. Defaults to terminal output.
@@ -270,7 +313,7 @@ function today(::Val{:terminal}; now, track, terminal_links)
     for j in eachindex(tracks)
         track = tracks[j]
         data = tables[j]
-        h_current = highlighters[j]
+        h_running = highlighters[j]
         println()
         pretty_table(
             data;
@@ -279,7 +322,7 @@ function today(::Val{:terminal}; now, track, terminal_links)
             header=header,
             header_crayon=header_crayon,
             border_crayon=border_crayon,
-            highlighters=(h_times, h_current),
+            highlighters=(h_times, h_running),
             tf=tf_unicode_rounded,
             alignment=[:c, :l, :c, :l],
         )
@@ -318,7 +361,7 @@ function today(::Val{:text}; now, track, terminal_links)
     for j in eachindex(tracks)
         track = tracks[j]
         data = tables[j]
-        h_current = highlighters[j]
+        h_running = highlighters[j]
         str = pretty_table(
             String,
             data;
@@ -327,7 +370,7 @@ function today(::Val{:text}; now, track, terminal_links)
             header=header,
             header_crayon=header_crayon,
             border_crayon=border_crayon,
-            highlighters=(h_times, h_current),
+            highlighters=(h_times, h_running),
             tf=tf_unicode_rounded,
             alignment=[:c, :l, :c, :l],
         )
