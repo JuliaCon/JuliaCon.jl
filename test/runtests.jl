@@ -60,6 +60,7 @@ using TimeZones
         @test isnothing(JuliaCon.today())
         @test isnothing(JuliaCon.today(track="BoF"))
         @test isnothing(JuliaCon.today(terminal_links=true))
+        @test isnothing(JuliaCon.tomorrow())
 
         # output to text (Vector{Sting})
         println("\n")
