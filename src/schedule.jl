@@ -237,20 +237,8 @@ function _speakers2str(speaker::Vector{String})
     end
 end
 
-function _get_running_talk_highlighter(track_grp; now=default_now())
-    for (i, talk) in enumerate(eachrow(track_grp))
-        start_time = talk.start
-        end_time = talk.start + talk.duration
-        if start_time <= astimezone(now, JULIACON_TIMEZONE) < end_time
-            return Highlighter((data, m, n) -> m == i, crayon"yellow")
-        end
-    end
-    return Highlighter((data, m, n) -> false, crayon"yellow")
-end
-
-
 function _get_today_tables(;
-    now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS, highlighting=true
+    now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS, highlighting=true, text_highlighting=false
 )
     jcon = get_conference_schedule()
     
@@ -277,8 +265,6 @@ function _get_today_tables(;
 
     # for each track
     for track_grp in groupby(talks_today, :track)
-        push!(tracks, first(track_grp).track)
-
         # build talk-data matrix
         data = Matrix{Union{String,URLTextCell}}(undef, nrow(track_grp), 4)
         for (i, talk) in enumerate(eachrow(track_grp))
@@ -287,13 +273,28 @@ function _get_today_tables(;
             data[i, 3] = JuliaCon.abbrev(talk.type)
             data[i, 4] = JuliaCon._speakers2str(talk.speaker)
         end
-        push!(tables, data)
 
-        h_running = if highlighting
-            _get_running_talk_highlighter(track_grp; now=now)
-        else
-            Highlighter((data, m, n) -> false, crayon"yellow")
+        h_running = Highlighter((data, m, n) -> false, crayon"yellow")
+        if highlighting
+            for (i, talk) in enumerate(eachrow(track_grp))
+                start_time = talk.start
+                end_time = talk.start + talk.duration
+                if start_time <= astimezone(now, JULIACON_TIMEZONE) < end_time
+                    if text_highlighting
+                        if data[i, 2] isa URLTextCell
+                            data[i, 2].x = string("> ", data[i, 2].x)
+                        else
+                            data[i, 2] = string("> ", data[i, 2])
+                        end
+                    end
+
+                    h_running = Highlighter((data, m, n) -> m == i, crayon"yellow")
+                end
+            end
         end
+
+        push!(tracks, first(track_grp).track)
+        push!(tables, data)
         push!(highlighters, h_running)
     end
 
@@ -307,8 +308,9 @@ function today(;
     track=nothing,
     terminal_links=TERMINAL_LINKS,
     output=:terminal, # can take the :text value to output a Vector{String}
+    highlighting=true
 )
-    return today(Val(output); now, track, terminal_links)
+    return today(Val(output); now, track, terminal_links, highlighting)
 end
 
 function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
@@ -364,7 +366,7 @@ function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
 end
 
 function today(::Val{:text}; now, track, terminal_links, highlighting=true)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting)
+    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting, text_highlighting=highlighting)
     isnothing(tables) && return nothing
 
     header = (["Time", "Title", "Type", "Speaker"],)
@@ -395,7 +397,7 @@ function today(::Val{:text}; now, track, terminal_links, highlighting=true)
 
     legend = if highlighting
         """
-        Currently running talks are highlighted in yellow (or not cause WIP).
+        Currently running talks are prefixed by a '>'.
 
         """
     else
