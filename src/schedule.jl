@@ -229,7 +229,13 @@ end
 # A dispatcher for the `now` methods. Default to terminal output.
 now(; now=default_now(), output=:terminal) = JuliaCon.now(Val(output); now=now)
 
-_speakers2str(speaker::Vector{String}) = join(speaker, ", ")
+function _speakers2str(speaker::Vector{String})
+    if length(speaker) <= 3
+        return join(speaker, ", ")
+    else
+        return string(join(speaker[1:3], ", "), " et al.")
+    end
+end
 
 function _get_running_talk_highlighter(track_grp; now=default_now())
     for (i, talk) in enumerate(eachrow(track_grp))
