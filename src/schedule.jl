@@ -405,7 +405,7 @@ function today(::Val{:terminal}; now, speaker, track, terminal_links, highlighti
     return nothing
 end
 
-function today(::Val{:text}; now, speaker, track, terminal_links, highlighting=true)
+function today(::Val{:text}; now, speaker, track, terminal_links, highlighting=true, legend=true)
     tracks, tables, highlighters = _get_today_tables(; now, speaker, track, terminal_links, highlighting, text_highlighting=highlighting)
     isnothing(tables) && return nothing
 
