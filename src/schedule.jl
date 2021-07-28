@@ -106,6 +106,34 @@ function get_tracks()
 end
 
 """
+    print_legend(highlighting)
+
+`highlighting` is a `Bool`.
+"""
+function print_legend(highlighting)
+    println()
+    if highlighting
+        printstyled("Currently running talks are highlighted in ")
+        printstyled("yellow"; color=:yellow)
+        printstyled(".")
+        println()
+        println()
+    end
+    print(abbrev(Talk), " = Talk, ")
+    print(abbrev(LightningTalk), " = Lightning Talk, ")
+    print(abbrev(SponsorTalk), " = Sponsor Talk, ")
+    println(abbrev(Keynote), " = Keynote, ")
+    print(abbrev(Workshop), " = Workshop, ")
+    print(abbrev(Minisymposium), " = Minisymposium, ")
+    println(abbrev(BoF), " = Birds of Feather, ")
+    print(abbrev(Experience), " = Experience, ")
+    println(abbrev(VirtualPoster), " = Virtual Poster")
+    println()
+    println("Check out $(CONFERENCE_SCHEDULE_URL) for more information.")
+end
+
+
+"""
     get_conference_schedule(; speaker=nothing)
 
 Get the conference schedule as a DataFrame.
@@ -335,12 +363,13 @@ function today(;
     track=nothing,
     terminal_links=TERMINAL_LINKS,
     output=:terminal, # can take the :text value to output a Vector{String}
-    highlighting=true
+    highlighting=true,
+    legend=true,
 )
-    return today(Val(output); now, speaker, track, terminal_links, highlighting)
+    return today(Val(output); now, speaker, track, terminal_links, highlighting, legend)
 end
 
-function today(::Val{:terminal}; now, speaker, track, terminal_links, highlighting=true)
+function today(::Val{:terminal}; now, speaker, track, terminal_links, highlighting=true, legend=true)
     tracks, tables, highlighters = _get_today_tables(; now, speaker, track, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
@@ -370,25 +399,9 @@ function today(::Val{:terminal}; now, speaker, track, terminal_links, highlighti
         )
     end
 
-    println()
-    if highlighting
-        printstyled("Currently running talks are highlighted in ")
-        printstyled("yellow"; color=:yellow)
-        printstyled(".")
-        println()
-        println()
+    if legend 
+        print_legend(highlighting)
     end
-    print(abbrev(Talk), " = Talk, ")
-    print(abbrev(LightningTalk), " = Lightning Talk, ")
-    print(abbrev(SponsorTalk), " = Sponsor Talk, ")
-    println(abbrev(Keynote), " = Keynote, ")
-    print(abbrev(Workshop), " = Workshop, ")
-    print(abbrev(Minisymposium), " = Minisymposium, ")
-    println(abbrev(BoF), " = Birds of Feather, ")
-    print(abbrev(Experience), " = Experience, ")
-    println(abbrev(VirtualPoster), " = Virtual Poster")
-    println()
-    println("Check out $(CONFERENCE_SCHEDULE_URL) for more information.")
     return nothing
 end
 
@@ -453,7 +466,30 @@ function tomorrow(;
     speaker=nothing,
     track=nothing,
     terminal_links=TERMINAL_LINKS,
-    output=:terminal, # can take the :text value to output a Vector{String}
+    output=:terminal, # can take the :text value to output a Vector{String},
+    legend=false
 )
-    return today(Val(output); now = now + Dates.Day(1), speaker, track, terminal_links, highlighting = false)
+    return today(Val(output); now = now + Dates.Day(1), speaker, track, terminal_links, highlighting = false,
+                 legend)
+end
+
+"""
+    talks_by(speaker)
+
+Prints all talks of a speaker identified by the (sub-)string `speaker`
+"""
+function talks_by(speaker; legend=false)
+    df = get_conference_schedule()
+    # strip of time and filter for pure days
+    days = unique(map(x -> Dates.yearmonthday(x), df.start))
+
+    # list of ZoneDateTime for all JuliaCon days
+    all_juliacon_dates = map(d -> ZonedDateTime(d..., JuliaCon.LOCAL_TIMEZONE), days)
+    t(d, legend) = today(; now = d, speaker, legend)
+
+    for d in all_juliacon_dates
+        t(d, legend)
+    end
+
+    return nothing
 end
