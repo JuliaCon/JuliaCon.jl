@@ -96,11 +96,21 @@ abbrev(x::JuliaConTalkType) = abbrev(typeof(x))
 is_schedule_json_available() = isfile(joinpath(CACHE_DIR, "schedule.json"))
 
 """
+    get_all_tracks()
+
+Returns a list of strings containing all track names.
+"""
+function get_tracks()
+    cs = get_conference_schedule()
+    return unique(cs.track)
+end
+
+"""
     get_conference_schedule(; speaker=nothing)
 
 Get the conference schedule as a DataFrame.
 On first call, the schedule is downloaded from Pretalx and cached for further usage.
-`speaker` can be a name or a string identifying the speaker to filter the schedule.
+`speaker` can be a string identifying the speaker to filter the schedule.
 """
 function get_conference_schedule(; speaker=nothing)
     isassigned(jcon) || update_schedule()
@@ -317,6 +327,7 @@ end
 
 Prints the schedule of today.
 `speaker` can be a string identifying the speaker to filter the schedule.
+`track` can be string used to filter for a track. See `JuliaCon.get_tracks()` for possible options.
 """
 function today(;
     now=default_now(),
@@ -435,6 +446,7 @@ end
 
 Prints the schedule of tomorrow.
 `speaker` can be a string identifying the speaker to filter the schedule.
+`track` can be string used to filter for a track. See `JuliaCon.get_tracks()` for possible options.
 """
 function tomorrow(;
     now=default_now(),
