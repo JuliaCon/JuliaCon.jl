@@ -313,6 +313,11 @@ function _get_today_tables(;
 end
 
 # A dispatcher for the `today` methods. Defaults to terminal output.
+"""     today(; speaker)
+
+Prints the schedule of today.
+`speaker` can be a string identifying the speaker to filter the schedule.
+"""
 function today(;
     now=default_now(),
     speaker=nothing,
@@ -426,6 +431,11 @@ function today(::Val{:text}; now, speaker, track, terminal_links, highlighting=t
     return strings
 end
 
+"""     tomorrow(; speaker)
+
+Prints the schedule of tomorrow.
+`speaker` can be a string identifying the speaker to filter the schedule.
+"""
 function tomorrow(;
     now=default_now(),
     speaker=nothing,
