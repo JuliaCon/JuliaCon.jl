@@ -96,12 +96,19 @@ abbrev(x::JuliaConTalkType) = abbrev(typeof(x))
 is_schedule_json_available() = isfile(joinpath(CACHE_DIR, "schedule.json"))
 
 """
+    get_conference_schedule(; speaker=nothing)
+
 Get the conference schedule as a DataFrame.
 On first call, the schedule is downloaded from Pretalx and cached for further usage.
+`speaker` can be a name or a string identifying the speaker to filter the schedule.
 """
-function get_conference_schedule()
+function get_conference_schedule(; speaker=nothing)
     isassigned(jcon) || update_schedule()
-    return jcon[]
+    # filter for speaker
+    jcon_filt = filter(jcon[]; view=true) do talk
+        return isnothing(speaker) || any(contains.(talk.speaker, speaker))
+    end
+    return jcon_filt
 end
 
 """
@@ -243,7 +250,7 @@ function _get_today_tables(;
     now=default_now(), speaker=nothing, track=nothing, terminal_links=TERMINAL_LINKS,
     highlighting=true, text_highlighting=false,
     )
-    jcon = get_conference_schedule()
+    jcon = get_conference_schedule(speaker=speaker)
     
     today_start_utc = ZonedDateTime(DateTime(Date(now), Time("00:00")), JULIACON_TIMEZONE)
     today_end_utc = ZonedDateTime(DateTime(Date(now) + Day(1), Time("00:00")), JULIACON_TIMEZONE)
@@ -254,10 +261,8 @@ function _get_today_tables(;
             return false
         end
 
-        date_cond = today_start_utc <= talk.start < today_end_utc
-        speaker_cond = isnothing(speaker) || any(contains.(talk.speaker, speaker))
         # talk starts "today" (local time)
-        return date_cond && speaker_cond
+        return today_start_utc <= talk.start < today_end_utc
     end
 
     # no talks today -> exit
