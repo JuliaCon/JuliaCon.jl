@@ -93,6 +93,24 @@ abbrev(::Type{VirtualPoster}) = "P"
 
 abbrev(x::JuliaConTalkType) = abbrev(typeof(x))
 
+
+function _track2color(track::String)
+    if track == "Red"
+        return :red
+    elseif track == "Green"
+        return :green
+    elseif track == "Purple"
+        return :magenta
+    elseif track == "Blue"
+        return :blue
+    elseif track == "JuMP Track"
+        return 208 # orange, see https://github.com/KristofferC/Crayons.jl/blob/master/README.md
+    else
+        return :default
+    end
+end
+
+
 is_schedule_json_available() = isfile(joinpath(CACHE_DIR, "schedule.json"))
 
 """
@@ -180,7 +198,7 @@ function _print_running_talks(running_talks; now=default_now())
     # println(Dates.format(default_now(), "HH:MM dd-mm-YYYY"))
     for talk in eachrow(running_talks)
         println()
-        printstyled(talk.track; bold=true, color=_track2color(talk.track))
+        printstyled(_add_track_emoji(string(talk.track)); bold=true, color=_track2color(talk.track))
         println()
         println("\t", talk.title, " (", string(talk.type), ")")
         println("\t", "├─ ", _speakers2str(talk.speaker))
@@ -191,27 +209,13 @@ function _print_running_talks(running_talks; now=default_now())
     return nothing
 end
 
-function _track2color(track::String)
-    if track == "Red"
-        return :red
-    elseif track == "Green"
-        return :green
-    elseif track == "Purple"
-        return :magenta
-    elseif track == "Blue"
-        return :blue
-    else
-        return :default
-    end
-end
-
 function now(::Val{:text}; now)
     running_talks = get_running_talks(; now=now)
     str = ""
     if !isnothing(running_talks)
         for talk in eachrow(running_talks)
             str *= """
-            $(talk.track)
+            $(_add_track_emoji(string(talk.track)))
             \t$(talk.title) ($(string(talk.type)))
             \t├─ $(JuliaCon._speakers2str(talk.speaker))
             \t└─ $(talk.url)
@@ -334,7 +338,7 @@ function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
         println()
         pretty_table(
             data;
-            title=track,
+            title=_add_track_emoji(track),
             title_crayon=Crayon(; foreground=_track2color(track), bold=true),
             header=header,
             header_crayon=header_crayon,
@@ -367,6 +371,24 @@ function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
     return nothing
 end
 
+function _add_track_emoji(track::AbstractString)
+    if track == "Red"
+        return "🍎 Red"
+    elseif track == "Green"
+        return "🍏 Green"
+    elseif track == "Blue"
+        return "🔷 Blue"
+    elseif track == "Purple"
+        return "💜 Purple"
+    elseif track == "BoF/Mini Track"
+        return "🕊  BoF/Mini Track"
+    elseif track == "JuMP Track"
+        return "🔸 JuMP Track"
+    else
+        return track
+    end
+end
+
 function today(::Val{:text}; now, track, terminal_links, highlighting=true)
     tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting, text_highlighting=highlighting)
     isnothing(tables) && return nothing
@@ -385,7 +407,7 @@ function today(::Val{:text}; now, track, terminal_links, highlighting=true)
         str = pretty_table(
             String,
             data;
-            title=track,
+            title=_add_track_emoji(track),
             title_crayon=Crayon(; foreground=_track2color(track), bold=true),
             header=header,
             header_crayon=header_crayon,
