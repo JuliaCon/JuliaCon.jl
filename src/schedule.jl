@@ -9,6 +9,8 @@ struct Workshop <: JuliaConTalkType end
 struct Experience <: JuliaConTalkType end
 struct VirtualPoster <: JuliaConTalkType end
 
+const CONFERENCE_SCHEDULE_URL = "https://live.juliacon.org/agenda"
+
 function json2df(conf)
     df = DataFrame(
         start = ZonedDateTime[],
@@ -185,7 +187,7 @@ function _print_running_talks(running_talks; now=default_now())
         println("\t", "└─ ", talk.url)
     end
     println("\n")
-    println("(Full schedule: https://pretalx.com/juliacon2021/schedule)")
+    println("(Full schedule: $(CONFERENCE_SCHEDULE_URL))")
     return nothing
 end
 
@@ -216,7 +218,7 @@ function now(::Val{:text}; now)
             """
         end
     end
-    str *= "\n(Full schedule: https://pretalx.com/juliacon2021/schedule)"
+    str *= "\n(Full schedule: $(CONFERENCE_SCHEDULE_URL))"
     return str
 end
 
@@ -361,7 +363,7 @@ function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
     print(abbrev(Experience), " = Experience, ")
     println(abbrev(VirtualPoster), " = Virtual Poster")
     println()
-    println("Check out https://pretalx.com/juliacon2021/schedule for more information.")
+    println("Check out $(CONFERENCE_SCHEDULE_URL) for more information.")
     return nothing
 end
 
@@ -409,7 +411,7 @@ function today(::Val{:text}; now, track, terminal_links, highlighting=true)
     $(JuliaCon.abbrev(JuliaCon.Workshop)) = Workshop, $(JuliaCon.abbrev(JuliaCon.Minisymposium)) = Minisymposium, $(JuliaCon.abbrev(JuliaCon.BoF)) = Birds of Feather,
     $(JuliaCon.abbrev(JuliaCon.Experience)) = Experience, $(JuliaCon.abbrev(JuliaCon.VirtualPoster)) = Virtual Poster
 
-    Check out https://pretalx.com/juliacon2021/schedule for more information.
+    Check out $(CONFERENCE_SCHEDULE_URL) for more information.
     """
     push!(strings, legend)
     return strings
