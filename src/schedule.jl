@@ -143,7 +143,7 @@ On first call, the schedule is downloaded from Pretalx and cached for further us
 function get_conference_schedule(; speaker=nothing)
     isassigned(jcon) || update_schedule()
     # filter for speaker
-    jcon_filt = filter(jcon[]; view=true) do talk
+    jcon_filt = filter(jcon[]) do talk
         return isnothing(speaker) || any(contains.(talk.speaker, speaker))
     end
     return jcon_filt
