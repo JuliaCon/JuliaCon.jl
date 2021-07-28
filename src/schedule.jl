@@ -8,6 +8,7 @@ struct Minisymposium <: JuliaConTalkType end
 struct Workshop <: JuliaConTalkType end
 struct Experience <: JuliaConTalkType end
 struct VirtualPoster <: JuliaConTalkType end
+struct SocialHour <: JuliaConTalkType end
 
 const CONFERENCE_SCHEDULE_URL = "https://live.juliacon.org/agenda"
 
@@ -66,6 +67,8 @@ function talktype_from_str(str)
         return Experience()
     elseif contains(str, "Virtual Poster")
         return VirtualPoster()
+    elseif contains(str, "Social hour")
+        return SocialHour()
     else
         error("Unknown JuliaCon talk type \"$str\".")
     end
@@ -80,6 +83,7 @@ string(x::Minisymposium) = "Minisymposium"
 string(x::Workshop) = "Workshop"
 string(x::Experience) = "Experience"
 string(x::VirtualPoster) = "Virtual Poster"
+string(x::SocialHour) = "Social hour"
 
 abbrev(::Type{LightningTalk}) = "L"
 abbrev(::Type{SponsorTalk}) = "S"
@@ -90,6 +94,7 @@ abbrev(::Type{Minisymposium}) = "M"
 abbrev(::Type{Workshop}) = "W"
 abbrev(::Type{Experience}) = "E"
 abbrev(::Type{VirtualPoster}) = "P"
+abbrev(::Type{SocialHour}) = "SH"
 
 abbrev(x::JuliaConTalkType) = abbrev(typeof(x))
 
@@ -288,7 +293,7 @@ function _get_today_tables(;
                 if start_time <= astimezone(now, JULIACON_TIMEZONE) < end_time
                     if text_highlighting
                         if data[i, 2] isa URLTextCell
-                            data[i, 2].x = string("> ", data[i, 2].x)
+                            data[i, 2].text = string("> ", data[i, 2].text)
                         else
                             data[i, 2] = string("> ", data[i, 2])
                         end
@@ -365,7 +370,8 @@ function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
     print(abbrev(Minisymposium), " = Minisymposium, ")
     println(abbrev(BoF), " = Birds of Feather, ")
     print(abbrev(Experience), " = Experience, ")
-    println(abbrev(VirtualPoster), " = Virtual Poster")
+    print(abbrev(VirtualPoster), " = Virtual Poster, ")
+    println(abbrev(SocialHour), " = Social Hour")
     println()
     println("Check out $(CONFERENCE_SCHEDULE_URL) for more information.")
     return nothing
@@ -431,7 +437,7 @@ function today(::Val{:text}; now, track, terminal_links, highlighting=true)
     legend *= """
     $(JuliaCon.abbrev(JuliaCon.Talk)) = Talk, $(JuliaCon.abbrev(JuliaCon.LightningTalk)) = Lightning Talk, $(JuliaCon.abbrev(JuliaCon.SponsorTalk)) = Sponsor Talk, $(JuliaCon.abbrev(JuliaCon.Keynote)) = Keynote,
     $(JuliaCon.abbrev(JuliaCon.Workshop)) = Workshop, $(JuliaCon.abbrev(JuliaCon.Minisymposium)) = Minisymposium, $(JuliaCon.abbrev(JuliaCon.BoF)) = Birds of Feather,
-    $(JuliaCon.abbrev(JuliaCon.Experience)) = Experience, $(JuliaCon.abbrev(JuliaCon.VirtualPoster)) = Virtual Poster
+    $(JuliaCon.abbrev(JuliaCon.Experience)) = Experience, $(JuliaCon.abbrev(JuliaCon.VirtualPoster)) = Virtual Poster, $(JuliaCon.abbrev(JuliaCon.SocialHour)) = Social Hour
 
     Check out $(CONFERENCE_SCHEDULE_URL) for more information.
     """
