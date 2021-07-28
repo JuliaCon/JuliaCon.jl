@@ -9,6 +9,7 @@ struct Workshop <: JuliaConTalkType end
 struct Experience <: JuliaConTalkType end
 struct VirtualPoster <: JuliaConTalkType end
 struct SocialHour <: JuliaConTalkType end
+struct UnkownTalkType <: JuliaConTalkType end
 
 const CONFERENCE_SCHEDULE_URL = "https://live.juliacon.org/agenda"
 
@@ -70,7 +71,7 @@ function talktype_from_str(str)
     elseif contains(str, "Social hour")
         return SocialHour()
     else
-        error("Unknown JuliaCon talk type \"$str\".")
+        return UnkownTalkType()
     end
 end
 
@@ -84,6 +85,7 @@ string(x::Workshop) = "Workshop"
 string(x::Experience) = "Experience"
 string(x::VirtualPoster) = "Virtual Poster"
 string(x::SocialHour) = "Social hour"
+string(x::UnkownTalkType) = "Unknown"
 
 abbrev(::Type{LightningTalk}) = "L"
 abbrev(::Type{SponsorTalk}) = "S"
@@ -95,6 +97,7 @@ abbrev(::Type{Workshop}) = "W"
 abbrev(::Type{Experience}) = "E"
 abbrev(::Type{VirtualPoster}) = "P"
 abbrev(::Type{SocialHour}) = "SH"
+abbrev(::Type{UnkownTalkType}) = "U"
 
 abbrev(x::JuliaConTalkType) = abbrev(typeof(x))
 
