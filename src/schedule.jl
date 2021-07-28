@@ -240,8 +240,9 @@ function _speakers2str(speaker::Vector{String})
 end
 
 function _get_today_tables(;
-    now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS, highlighting=true, text_highlighting=false
-)
+    now=default_now(), speaker=nothing, track=nothing, terminal_links=TERMINAL_LINKS,
+    highlighting=true, text_highlighting=false,
+    )
     jcon = get_conference_schedule()
     
     today_start_utc = ZonedDateTime(DateTime(Date(now), Time("00:00")), JULIACON_TIMEZONE)
@@ -253,8 +254,10 @@ function _get_today_tables(;
             return false
         end
 
+        date_cond = today_start_utc <= talk.start < today_end_utc
+        speaker_cond = isnothing(speaker) || any(contains.(talk.speaker, speaker))
         # talk starts "today" (local time)
-        return today_start_utc <= talk.start < today_end_utc
+        return date_cond && speaker_cond
     end
 
     # no talks today -> exit
@@ -307,16 +310,17 @@ end
 # A dispatcher for the `today` methods. Defaults to terminal output.
 function today(;
     now=default_now(),
+    speaker=nothing,
     track=nothing,
     terminal_links=TERMINAL_LINKS,
     output=:terminal, # can take the :text value to output a Vector{String}
     highlighting=true
 )
-    return today(Val(output); now, track, terminal_links, highlighting)
+    return today(Val(output); now, speaker, track, terminal_links, highlighting)
 end
 
-function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting)
+function today(::Val{:terminal}; now, speaker, track, terminal_links, highlighting=true)
+    tracks, tables, highlighters = _get_today_tables(; now, speaker, track, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
     header = (["Time", "Title", "Type", "Speaker"],)
@@ -367,8 +371,8 @@ function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
     return nothing
 end
 
-function today(::Val{:text}; now, track, terminal_links, highlighting=true)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting, text_highlighting=highlighting)
+function today(::Val{:text}; now, speaker, track, terminal_links, highlighting=true)
+    tracks, tables, highlighters = _get_today_tables(; now, speaker, track, terminal_links, highlighting, text_highlighting=highlighting)
     isnothing(tables) && return nothing
 
     header = (["Time", "Title", "Type", "Speaker"],)
@@ -419,9 +423,10 @@ end
 
 function tomorrow(;
     now=default_now(),
+    speaker=nothing,
     track=nothing,
     terminal_links=TERMINAL_LINKS,
     output=:terminal, # can take the :text value to output a Vector{String}
 )
-    return today(Val(output); now = now + Dates.Day(1), track, terminal_links, highlighting = false)
+    return today(Val(output); now = now + Dates.Day(1), speaker, track, terminal_links, highlighting = false)
 end
