@@ -8,6 +8,8 @@ struct Minisymposium <: JuliaConTalkType end
 struct Workshop <: JuliaConTalkType end
 struct Experience <: JuliaConTalkType end
 struct VirtualPoster <: JuliaConTalkType end
+struct SocialHour <: JuliaConTalkType end
+struct UnkownTalkType <: JuliaConTalkType end
 
 const CONFERENCE_SCHEDULE_URL = "https://live.juliacon.org/agenda"
 
@@ -66,8 +68,10 @@ function talktype_from_str(str)
         return Experience()
     elseif contains(str, "Virtual Poster")
         return VirtualPoster()
+    elseif contains(str, "Social hour")
+        return SocialHour()
     else
-        error("Unknown JuliaCon talk type \"$str\".")
+        return UnkownTalkType()
     end
 end
 
@@ -80,6 +84,8 @@ string(x::Minisymposium) = "Minisymposium"
 string(x::Workshop) = "Workshop"
 string(x::Experience) = "Experience"
 string(x::VirtualPoster) = "Virtual Poster"
+string(x::SocialHour) = "Social hour"
+string(x::UnkownTalkType) = "Unknown"
 
 abbrev(::Type{LightningTalk}) = "L"
 abbrev(::Type{SponsorTalk}) = "S"
@@ -90,8 +96,28 @@ abbrev(::Type{Minisymposium}) = "M"
 abbrev(::Type{Workshop}) = "W"
 abbrev(::Type{Experience}) = "E"
 abbrev(::Type{VirtualPoster}) = "P"
+abbrev(::Type{SocialHour}) = "SH"
+abbrev(::Type{UnkownTalkType}) = "U"
 
 abbrev(x::JuliaConTalkType) = abbrev(typeof(x))
+
+
+function _track2color(track::String)
+    if track == "Red"
+        return :red
+    elseif track == "Green"
+        return :green
+    elseif track == "Purple"
+        return :magenta
+    elseif track == "Blue"
+        return :blue
+    elseif track == "JuMP Track"
+        return 208 # orange, see https://github.com/KristofferC/Crayons.jl/blob/master/README.md
+    else
+        return :default
+    end
+end
+
 
 is_schedule_json_available() = isfile(joinpath(CACHE_DIR, "schedule.json"))
 
@@ -225,7 +251,7 @@ function _print_running_talks(running_talks; now=default_now())
     # println(Dates.format(default_now(), "HH:MM dd-mm-YYYY"))
     for talk in eachrow(running_talks)
         println()
-        printstyled(talk.track; bold=true, color=_track2color(talk.track))
+        printstyled(_add_track_emoji(string(talk.track)); bold=true, color=_track2color(talk.track))
         println()
         println("\t", talk.title, " (", string(talk.type), ")")
         println("\t", "├─ ", _speakers2str(talk.speaker))
@@ -236,27 +262,13 @@ function _print_running_talks(running_talks; now=default_now())
     return nothing
 end
 
-function _track2color(track::String)
-    if track == "Red"
-        return :red
-    elseif track == "Green"
-        return :green
-    elseif track == "Purple"
-        return :magenta
-    elseif track == "Blue"
-        return :blue
-    else
-        return :default
-    end
-end
-
 function now(::Val{:text}; now)
     running_talks = get_running_talks(; now=now)
     str = ""
     if !isnothing(running_talks)
         for talk in eachrow(running_talks)
             str *= """
-            $(talk.track)
+            $(_add_track_emoji(string(talk.track)))
             \t$(talk.title) ($(string(talk.type)))
             \t├─ $(JuliaCon._speakers2str(talk.speaker))
             \t└─ $(talk.url)
@@ -330,7 +342,7 @@ function _get_today_tables(;
                 if start_time <= astimezone(now, JULIACON_TIMEZONE) < end_time
                     if text_highlighting
                         if data[i, 2] isa URLTextCell
-                            data[i, 2].x = string("> ", data[i, 2].x)
+                            data[i, 2].text = string("> ", data[i, 2].text)
                         else
                             data[i, 2] = string("> ", data[i, 2])
                         end
@@ -373,11 +385,79 @@ function today(::Val{:terminal}; now, speaker, track, terminal_links, highlighti
     tracks, tables, highlighters = _get_today_tables(; now, speaker, track, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
+<<<<<<< HEAD
     pretty_print_results(now, tracks, legend, highlighting, tables, highlighters)
     return nothing
 end
 
 
+=======
+    header = (["Time", "Title", "Type", "Speaker"],)
+    header_crayon = crayon"dark_gray bold"
+    border_crayon = crayon"dark_gray"
+    h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
+
+    println()
+    println(Dates.format(TimeZones.Date(now), "E d U Y"))
+
+    for j in eachindex(tracks)
+        track = tracks[j]
+        data = tables[j]
+        h_running = highlighters[j]
+        println()
+        pretty_table(
+            data;
+            title=_add_track_emoji(track),
+            title_crayon=Crayon(; foreground=_track2color(track), bold=true),
+            header=header,
+            header_crayon=header_crayon,
+            border_crayon=border_crayon,
+            highlighters=(h_times, h_running),
+            tf=tf_unicode_rounded,
+            alignment=[:c, :l, :c, :l],
+        )
+    end
+
+    println()
+    if highlighting
+        printstyled("Currently running talks are highlighted in ")
+        printstyled("yellow"; color=:yellow)
+        printstyled(".")
+        println()
+        println()
+    end
+    print(abbrev(Talk), " = Talk, ")
+    print(abbrev(LightningTalk), " = Lightning Talk, ")
+    print(abbrev(SponsorTalk), " = Sponsor Talk, ")
+    println(abbrev(Keynote), " = Keynote, ")
+    print(abbrev(Workshop), " = Workshop, ")
+    print(abbrev(Minisymposium), " = Minisymposium, ")
+    println(abbrev(BoF), " = Birds of Feather, ")
+    print(abbrev(Experience), " = Experience, ")
+    print(abbrev(VirtualPoster), " = Virtual Poster, ")
+    println(abbrev(SocialHour), " = Social Hour")
+    println()
+    println("Check out $(CONFERENCE_SCHEDULE_URL) for more information.")
+    return nothing
+end
+
+function _add_track_emoji(track::AbstractString)
+    if track == "Red"
+        return "🍎 Red"
+    elseif track == "Green"
+        return "🍏 Green"
+    elseif track == "Blue"
+        return "🔷 Blue"
+    elseif track == "Purple"
+        return "💜 Purple"
+    elseif track == "BoF/Mini Track"
+        return "🕊  BoF/Mini Track"
+    elseif track == "JuMP Track"
+        return "🔸 JuMP Track"
+    else
+        return track
+    end
+end
 
 function today(::Val{:text}; now, speaker, track, terminal_links, highlighting=true, legend=true)
     tracks, tables, highlighters = _get_today_tables(; now, speaker, track, terminal_links, highlighting, text_highlighting=highlighting)
