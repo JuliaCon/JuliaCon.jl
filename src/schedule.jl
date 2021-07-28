@@ -122,12 +122,57 @@ end
 is_schedule_json_available() = isfile(joinpath(CACHE_DIR, "schedule.json"))
 
 """
+    get_all_tracks()
+
+Returns a list of strings containing all track names.
+"""
+function get_tracks()
+    cs = get_conference_schedule()
+    return unique(cs.track)
+end
+
+"""
+    print_legend(highlighting)
+
+`highlighting` is a `Bool`.
+"""
+function print_legend(highlighting)
+    println()
+    if highlighting
+        printstyled("Currently running talks are highlighted in ")
+        printstyled("yellow"; color=:yellow)
+        printstyled(".")
+        println()
+        println()
+    end
+    print(abbrev(Talk), " = Talk, ")
+    print(abbrev(LightningTalk), " = Lightning Talk, ")
+    print(abbrev(SponsorTalk), " = Sponsor Talk, ")
+    println(abbrev(Keynote), " = Keynote, ")
+    print(abbrev(Workshop), " = Workshop, ")
+    print(abbrev(Minisymposium), " = Minisymposium, ")
+    println(abbrev(BoF), " = Birds of Feather, ")
+    print(abbrev(Experience), " = Experience, ")
+    println(abbrev(VirtualPoster), " = Virtual Poster")
+    println()
+    println("Check out $(CONFERENCE_SCHEDULE_URL) for more information.")
+end
+
+
+"""
+    get_conference_schedule(; speaker=nothing)
+
 Get the conference schedule as a DataFrame.
 On first call, the schedule is downloaded from Pretalx and cached for further usage.
+`speaker` can be a string identifying the speaker to filter the schedule.
 """
-function get_conference_schedule()
+function get_conference_schedule(; speaker=nothing)
     isassigned(jcon) || update_schedule()
-    return jcon[]
+    # filter for speaker
+    jcon_filt = filter(jcon[]) do talk
+        return isnothing(speaker) || any(contains.(talk.speaker, speaker))
+    end
+    return jcon_filt
 end
 
 """
@@ -252,9 +297,10 @@ function _speakers2str(speaker::Vector{String})
 end
 
 function _get_today_tables(;
-    now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS, highlighting=true, text_highlighting=false
-)
-    jcon = get_conference_schedule()
+    now=default_now(), speaker=nothing, track=nothing, terminal_links=TERMINAL_LINKS,
+    highlighting=true, text_highlighting=false,
+    )
+    jcon = get_conference_schedule(speaker=speaker)
     
     today_start_utc = ZonedDateTime(DateTime(Date(now), Time("00:00")), JULIACON_TIMEZONE)
     today_end_utc = ZonedDateTime(DateTime(Date(now) + Day(1), Time("00:00")), JULIACON_TIMEZONE)
@@ -317,66 +363,29 @@ function _get_today_tables(;
 end
 
 # A dispatcher for the `today` methods. Defaults to terminal output.
+"""     today(; speaker)
+
+Prints the schedule of today.
+`speaker` can be a string identifying the speaker to filter the schedule.
+`track` can be string used to filter for a track. See `JuliaCon.get_tracks()` for possible options.
+"""
 function today(;
     now=default_now(),
+    speaker=nothing,
     track=nothing,
     terminal_links=TERMINAL_LINKS,
     output=:terminal, # can take the :text value to output a Vector{String}
-    highlighting=true
+    highlighting=true,
+    legend=true,
 )
-    return today(Val(output); now, track, terminal_links, highlighting)
+    return today(Val(output); now, speaker, track, terminal_links, highlighting, legend)
 end
 
-function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting)
+function today(::Val{:terminal}; now, speaker, track, terminal_links, highlighting=true, legend=true)
+    tracks, tables, highlighters = _get_today_tables(; now, speaker, track, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
-    header = (["Time", "Title", "Type", "Speaker"],)
-    header_crayon = crayon"dark_gray bold"
-    border_crayon = crayon"dark_gray"
-    h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
-
-    println()
-    println(Dates.format(TimeZones.Date(now), "E d U Y"))
-
-    for j in eachindex(tracks)
-        track = tracks[j]
-        data = tables[j]
-        h_running = highlighters[j]
-        println()
-        pretty_table(
-            data;
-            title=_add_track_emoji(track),
-            title_crayon=Crayon(; foreground=_track2color(track), bold=true),
-            header=header,
-            header_crayon=header_crayon,
-            border_crayon=border_crayon,
-            highlighters=(h_times, h_running),
-            tf=tf_unicode_rounded,
-            alignment=[:c, :l, :c, :l],
-        )
-    end
-
-    println()
-    if highlighting
-        printstyled("Currently running talks are highlighted in ")
-        printstyled("yellow"; color=:yellow)
-        printstyled(".")
-        println()
-        println()
-    end
-    print(abbrev(Talk), " = Talk, ")
-    print(abbrev(LightningTalk), " = Lightning Talk, ")
-    print(abbrev(SponsorTalk), " = Sponsor Talk, ")
-    println(abbrev(Keynote), " = Keynote, ")
-    print(abbrev(Workshop), " = Workshop, ")
-    print(abbrev(Minisymposium), " = Minisymposium, ")
-    println(abbrev(BoF), " = Birds of Feather, ")
-    print(abbrev(Experience), " = Experience, ")
-    print(abbrev(VirtualPoster), " = Virtual Poster, ")
-    println(abbrev(SocialHour), " = Social Hour")
-    println()
-    println("Check out $(CONFERENCE_SCHEDULE_URL) for more information.")
+    pretty_print_results(now, tracks, legend, highlighting, tables, highlighters)
     return nothing
 end
 
@@ -398,61 +407,65 @@ function _add_track_emoji(track::AbstractString)
     end
 end
 
-function today(::Val{:text}; now, track, terminal_links, highlighting=true)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting, text_highlighting=highlighting)
+function today(::Val{:text}; now, speaker, track, terminal_links, highlighting=true, legend=true)
+    tracks, tables, highlighters = _get_today_tables(; now, speaker, track, terminal_links, highlighting, text_highlighting=highlighting)
     isnothing(tables) && return nothing
 
-    header = (["Time", "Title", "Type", "Speaker"],)
-    header_crayon = crayon"dark_gray bold"
-    border_crayon = crayon"dark_gray"
-    h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
-
-    strings = Vector{String}()
-    push!(strings, string(Dates.format(TimeZones.Date(now), "E d U Y")))
-    for j in eachindex(tracks)
-        track = tracks[j]
-        data = tables[j]
-        h_running = highlighters[j]
-        str = pretty_table(
-            String,
-            data;
-            title=_add_track_emoji(track),
-            title_crayon=Crayon(; foreground=_track2color(track), bold=true),
-            header=header,
-            header_crayon=header_crayon,
-            border_crayon=border_crayon,
-            highlighters=(h_times, h_running),
-            tf=tf_unicode_rounded,
-            alignment=[:c, :l, :c, :l],
-        )
-        push!(strings, str)
-    end
-
-    legend = if highlighting
-        """
-        Currently running talks are prefixed by a '>'.
-
-        """
-    else
-        ""
-    end
-
-    legend *= """
-    $(JuliaCon.abbrev(JuliaCon.Talk)) = Talk, $(JuliaCon.abbrev(JuliaCon.LightningTalk)) = Lightning Talk, $(JuliaCon.abbrev(JuliaCon.SponsorTalk)) = Sponsor Talk, $(JuliaCon.abbrev(JuliaCon.Keynote)) = Keynote,
-    $(JuliaCon.abbrev(JuliaCon.Workshop)) = Workshop, $(JuliaCon.abbrev(JuliaCon.Minisymposium)) = Minisymposium, $(JuliaCon.abbrev(JuliaCon.BoF)) = Birds of Feather,
-    $(JuliaCon.abbrev(JuliaCon.Experience)) = Experience, $(JuliaCon.abbrev(JuliaCon.VirtualPoster)) = Virtual Poster, $(JuliaCon.abbrev(JuliaCon.SocialHour)) = Social Hour
-
-    Check out $(CONFERENCE_SCHEDULE_URL) for more information.
-    """
-    push!(strings, legend)
-    return strings
+    results_to_string(now, tracks, legend, highlighting, tables, highlighters)
 end
 
+
+"""     tomorrow(; speaker)
+
+Prints the schedule of tomorrow.
+`speaker` can be a string identifying the speaker to filter the schedule.
+`track` can be string used to filter for a track. See `JuliaCon.get_tracks()` for possible options.
+"""
 function tomorrow(;
     now=default_now(),
+    speaker=nothing,
     track=nothing,
     terminal_links=TERMINAL_LINKS,
-    output=:terminal, # can take the :text value to output a Vector{String}
+    output=:terminal, # can take the :text value to output a Vector{String},
+    legend=true
 )
-    return today(Val(output); now = now + Dates.Day(1), track, terminal_links, highlighting = false)
+    return today(Val(output); now = now + Dates.Day(1), speaker, track, terminal_links, highlighting = false,
+                 legend)
+end
+
+"""
+    talks_by(speaker; output=:terminal, legend=false)
+
+Prints all talks of a speaker identified by the (sub-)string `speaker`
+"""
+function talks_by(speaker; output=:terminal, legend=false)
+    df = get_conference_schedule()
+    # strip of time and filter for pure days
+    days = unique(map(x -> Dates.yearmonthday(x), df.start))
+
+    # list of ZoneDateTime for all JuliaCon days
+    all_juliacon_dates = map(d -> ZonedDateTime(d..., JuliaCon.LOCAL_TIMEZONE), days)
+    t(d, legend) = _get_today_tables(; now = d, speaker, legend)
+
+    _print_talks_by(all_juliacon_dates, speaker, legend, Val(output))
+end
+
+function _print_talks_by(all_juliacon_dates, speaker, legend, ::Val{:text})
+    str = []
+    for d in all_juliacon_dates
+        tracks, tables, highlighters = _get_today_tables(; now=d, speaker)
+        isnothing(tables) && continue
+        s = results_to_string(d, tracks, legend, true, tables, highlighters)
+        append!(str, s)
+    end
+    return str
+end
+
+function _print_talks_by(all_juliacon_dates, speaker, legend, ::Val{:terminal})
+    for d in all_juliacon_dates
+        tracks, tables, highlighters = _get_today_tables(; now=d, speaker)
+        isnothing(tables) && continue
+        pretty_print_results(d, tracks, legend, true, tables, highlighters)
+    end
+    return nothing
 end

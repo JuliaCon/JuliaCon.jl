@@ -14,6 +14,7 @@ using DataFrames
 include("preferences.jl")
 include("countries.jl")
 include("tshirtcode.jl")
+include("formatting.jl")
 include("schedule.jl")
 
 function __init__()
