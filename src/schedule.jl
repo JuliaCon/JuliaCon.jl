@@ -406,11 +406,11 @@ function tomorrow(;
 end
 
 """
-    talks_by(speaker)
+    talks_by(speaker; output=:terminal, legend=false)
 
 Prints all talks of a speaker identified by the (sub-)string `speaker`
 """
-function talks_by(speaker; legend=false)
+function talks_by(speaker; output=:terminal, legend=false)
     df = get_conference_schedule()
     # strip of time and filter for pure days
     days = unique(map(x -> Dates.yearmonthday(x), df.start))
@@ -419,11 +419,25 @@ function talks_by(speaker; legend=false)
     all_juliacon_dates = map(d -> ZonedDateTime(d..., JuliaCon.LOCAL_TIMEZONE), days)
     t(d, legend) = _get_today_tables(; now = d, speaker, legend)
 
+    _print_talks_by(all_juliacon_dates, speaker, legend, Val(output))
+end
+
+function _print_talks_by(all_juliacon_dates, speaker, legend, ::Val{:text})
+    str = []
+    for d in all_juliacon_dates
+        tracks, tables, highlighters = _get_today_tables(; now=d, speaker)
+        isnothing(tables) && continue
+        s = results_to_string(d, tracks, legend, true, tables, highlighters)
+        append!(str, s)
+    end
+    return str
+end
+
+function _print_talks_by(all_juliacon_dates, speaker, legend, ::Val{:terminal})
     for d in all_juliacon_dates
         tracks, tables, highlighters = _get_today_tables(; now=d, speaker)
         isnothing(tables) && continue
         pretty_print_results(d, tracks, legend, true, tables, highlighters)
     end
-
     return nothing
 end
