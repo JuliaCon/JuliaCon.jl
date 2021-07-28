@@ -385,59 +385,7 @@ function today(::Val{:terminal}; now, speaker, track, terminal_links, highlighti
     tracks, tables, highlighters = _get_today_tables(; now, speaker, track, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
-<<<<<<< HEAD
     pretty_print_results(now, tracks, legend, highlighting, tables, highlighters)
-    return nothing
-end
-
-
-=======
-    header = (["Time", "Title", "Type", "Speaker"],)
-    header_crayon = crayon"dark_gray bold"
-    border_crayon = crayon"dark_gray"
-    h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
-
-    println()
-    println(Dates.format(TimeZones.Date(now), "E d U Y"))
-
-    for j in eachindex(tracks)
-        track = tracks[j]
-        data = tables[j]
-        h_running = highlighters[j]
-        println()
-        pretty_table(
-            data;
-            title=_add_track_emoji(track),
-            title_crayon=Crayon(; foreground=_track2color(track), bold=true),
-            header=header,
-            header_crayon=header_crayon,
-            border_crayon=border_crayon,
-            highlighters=(h_times, h_running),
-            tf=tf_unicode_rounded,
-            alignment=[:c, :l, :c, :l],
-        )
-    end
-
-    println()
-    if highlighting
-        printstyled("Currently running talks are highlighted in ")
-        printstyled("yellow"; color=:yellow)
-        printstyled(".")
-        println()
-        println()
-    end
-    print(abbrev(Talk), " = Talk, ")
-    print(abbrev(LightningTalk), " = Lightning Talk, ")
-    print(abbrev(SponsorTalk), " = Sponsor Talk, ")
-    println(abbrev(Keynote), " = Keynote, ")
-    print(abbrev(Workshop), " = Workshop, ")
-    print(abbrev(Minisymposium), " = Minisymposium, ")
-    println(abbrev(BoF), " = Birds of Feather, ")
-    print(abbrev(Experience), " = Experience, ")
-    print(abbrev(VirtualPoster), " = Virtual Poster, ")
-    println(abbrev(SocialHour), " = Social Hour")
-    println()
-    println("Check out $(CONFERENCE_SCHEDULE_URL) for more information.")
     return nothing
 end
 
