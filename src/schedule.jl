@@ -399,7 +399,7 @@ function tomorrow(;
     track=nothing,
     terminal_links=TERMINAL_LINKS,
     output=:terminal, # can take the :text value to output a Vector{String},
-    legend=false
+    legend=true
 )
     return today(Val(output); now = now + Dates.Day(1), speaker, track, terminal_links, highlighting = false,
                  legend)
