@@ -6,7 +6,7 @@
 
 ## T-Shirt code
 
-This package makes the code on the JuliaCon 2021 [T-shirt](#t-shirt) work! Of course, you should [buy one here](https://www.bonfire.com/juliacon-repl/)!
+This package makes the code on the JuliaCon 2021/2022 [T-shirts](#t-shirt) work! Of course, you should [buy one here](https://www.bonfire.com/juliacon-repl/)!
 
 To make the `@everywhere` do something you need to start Julia with multiple worker processes: `julia -p 4`.
 
@@ -15,7 +15,7 @@ To make the `@everywhere` do something you need to start Julia with multiple wor
 ```julia
 using JuliaCon, Distributed
 
-@everywhere juliacon2021()
+@everywhere juliacon2022()
 ```
 
 <img width="1145" alt="Screenshot 2021-06-02 at 02 05 12" src="https://user-images.githubusercontent.com/187980/120404611-04780180-c347-11eb-860e-88eed268d1a0.png">
