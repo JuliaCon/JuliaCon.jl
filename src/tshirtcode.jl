@@ -1,7 +1,7 @@
-function juliacon2021(::Val{:terminal})
+function juliacon2022(::Val{:terminal})
     if myid() == 1
         return println(
-            "Welcome to JuliaCon 2021! Find more information on https://juliacon.org/2021/."
+            "Welcome to JuliaCon 2022! Find more information on https://juliacon.org/2022/."
         )
     else
         return println("Greetings from ", rand(countries), "!")
@@ -10,8 +10,8 @@ function juliacon2021(::Val{:terminal})
 end
 
 # TODO: needs love for a distributed version based on the :terminal method (no hurry though)
-function juliacon2021(::Val{:text})
-    return "Welcome to JuliaCon 2021! Find more information on https://juliacon.org/2021/."
+function juliacon2022(::Val{:text})
+    return "Welcome to JuliaCon 2022! Find more information on https://juliacon.org/2022/."
 end
 
-juliacon2021(; output=:terminal) = juliacon2021(Val(output))
+juliacon2022(; output=:terminal) = juliacon2022(Val(output))
