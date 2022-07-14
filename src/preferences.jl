@@ -16,7 +16,7 @@ const LOCAL_TIMEZONE = begin
     end
 end
 
-const PRETALX_JSON_URL = "https://pretalx.com/juliacon2022/schedule/export/schedule.json"
+const PRETALX_JSON_URL = "https://pretalx.com/juliacon-2022/schedule/export/schedule.json"
 const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2022_schedule/schedule.json"
 const jcon = Ref{DataFrame}()
 
