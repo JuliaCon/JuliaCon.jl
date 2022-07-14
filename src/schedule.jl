@@ -31,7 +31,7 @@ function json2df(conf)
                 # parse duration
                 tmp = split(talk["duration"], ':')
                 dur = Hour(tmp[1]) + Minute(tmp[2])
-                
+
                 d = Dict(
                     :start => ZonedDateTime(DateTime(date, Time(talk["start"])), JULIACON_TIMEZONE),
                     :duration => dur,
@@ -45,7 +45,7 @@ function json2df(conf)
             end
         end
     end
-    
+
     return df
 end
 
@@ -54,7 +54,7 @@ function talktype_from_str(str)
         return Talk()
     elseif str == "Lightning talk"
         return LightningTalk()
-    elseif str == "Sponsor Talk"
+    elseif str == "Sponsor Talk" || contains(lowercase(str), "sponsor")
         return SponsorTalk()
     elseif str == "Keynote"
         return Keynote()
@@ -66,7 +66,7 @@ function talktype_from_str(str)
         return Workshop()
     elseif contains(str, "Experience")
         return Experience()
-    elseif contains(str, "Virtual Poster")
+    elseif contains(lowercase(str), "virtual poster")
         return VirtualPoster()
     elseif contains(str, "Social hour")
         return SocialHour()
@@ -76,7 +76,7 @@ function talktype_from_str(str)
 end
 
 string(x::LightningTalk) = "Lightning Talk"
-string(x::SponsorTalk) = "Sponsor Talk"
+string(x::SponsorTalk) = "Sponsor Talk/Forum"
 string(x::Talk) = "Talk"
 string(x::Keynote) = "Keynote"
 string(x::BoF) = "Birds of Feather"
@@ -255,7 +255,7 @@ function _get_today_tables(;
     now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS, highlighting=true, text_highlighting=false
 )
     jcon = get_conference_schedule()
-    
+
     today_start_utc = ZonedDateTime(DateTime(Date(now), Time("00:00")), JULIACON_TIMEZONE)
     today_end_utc = ZonedDateTime(DateTime(Date(now) + Day(1), Time("00:00")), JULIACON_TIMEZONE)
 
@@ -367,7 +367,7 @@ function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
     end
     print(abbrev(Talk), " = Talk, ")
     print(abbrev(LightningTalk), " = Lightning Talk, ")
-    print(abbrev(SponsorTalk), " = Sponsor Talk, ")
+    print(abbrev(SponsorTalk), " = Sponsor Talk/Forum, ")
     println(abbrev(Keynote), " = Keynote, ")
     print(abbrev(Workshop), " = Workshop, ")
     print(abbrev(Minisymposium), " = Minisymposium, ")
@@ -389,8 +389,8 @@ function _add_track_emoji(track::AbstractString)
         return "🔷 Blue"
     elseif track == "Purple"
         return "💜 Purple"
-    elseif track == "BoF/Mini Track"
-        return "🕊  BoF/Mini Track"
+    elseif track == "BoF"
+        return "🕊  BoF"
     elseif track == "JuMP Track"
         return "🔸 JuMP Track"
     else
