@@ -4,7 +4,7 @@ const CACHE_DIR = @load_preference(
 )
 const TIMEOUT = parse(Float64, @load_preference("timeout", "5.0"))
 const TERMINAL_LINKS = parse(Bool, @load_preference("terminal_links", "false"))
-const JULIACON_TIMEZONE = tz"UTC"
+const JULIACON_TIMEZONE = tz"UTC-4" # Eastern Daylight Time at MIT, Cambridge, USA (2023)
 const LOCAL_TIMEZONE = begin
     tzstr = @load_preference("local_timezone", "")
     if !istimezone(tzstr)
@@ -67,12 +67,9 @@ Simulates that we are live / in the middle of JuliaCon.
 """
 function debugmode(on::Bool=true)
     if on
-        # @eval JuliaCon default_now() = ZonedDateTime(Dates.DateTime("2022-07-20T18:00:00.000"), tz"MET") # JuliaCon2022 workshops
-        # @eval JuliaCon default_now() = ZonedDateTime(Dates.DateTime("2022-07-30T22:00:00.000"), tz"MET") # JuliaCon2022 posters
         @eval JuliaCon function default_now()
-            return ZonedDateTime(Dates.DateTime("2023-07-27T13:35:00.000"), tz"MET")
-            # return ZonedDateTime(Dates.DateTime("2022-07-24T18:15:00.000"), tz"America/Los_Angeles")
-            # return ZonedDateTime(Dates.DateTime("2022-07-24T20:00:00.000"), tz"MET")
+            return ZonedDateTime(Dates.DateTime("2023-07-27T21:35:00.000"), tz"MET")
+            # return ZonedDateTime(Dates.DateTime("2023-07-27T12:15:00.000"), JULIACON_TIMEZONE)
         end # JuliaCon2023
     else
         @eval JuliaCon default_now() = TimeZones.now(LOCAL_TIMEZONE)

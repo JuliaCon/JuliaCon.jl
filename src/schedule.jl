@@ -224,15 +224,26 @@ function get_running_talks(; now=default_now())
     return running_talks
 end
 
-function _print_running_talks(running_talks; now=default_now())
+function _print_talks_list(running_talks; now=default_now(), bold_title=false, show_time=false)
     nrow(running_talks) > 0 || return nothing
-    # println()
-    # println(Dates.format(default_now(), "HH:MM dd-mm-YYYY"))
     for talk in eachrow(running_talks)
         println()
-        printstyled(talk.room; bold=true, color=_room2color(talk.room))
+        if !show_time
+            printstyled(talk.room; bold=true, color=_room2color(talk.room))
+        else
+            # t = TimeZones.DateTime(talk.start)
+            t = astimezone(talk.start, timezone(now))
+            printstyled(Dates.format(t, "E d U Y"), ", ", Dates.format(t, "HH:MM"); bold=true, color=_room2color(talk.room))
+            print(" in ")
+            printstyled(talk.room; bold=true, color=_room2color(talk.room))
+        end
         println()
-        println("\t", talk.title, " (", string(talk.type), ")")
+        if !bold_title
+            println("\t", talk.title, " (", string(talk.type), ")")
+        else
+            printstyled("\t", talk.title; bold=true, color=:white)
+            println(" (", string(talk.type), ")")
+        end
         println("\t", "├─ ", _speakers2str(talk.speaker))
         println("\t", "├─ ", talk.url)
         print("\t", "└─ ");
@@ -240,12 +251,22 @@ function _print_running_talks(running_talks; now=default_now())
         printstyled(talk.track; bold=false, color=_track2color(talk.track));
         println()
     end
-    println("\n")
-    println("(Full schedule: $(CONFERENCE_SCHEDULE_URL))")
+    # println("\n")
+    # println("(Full schedule: $(CONFERENCE_SCHEDULE_URL))")
+    if show_time
+        println()
+        if JULIACON_TIMEZONE == timezone(now)
+            println("(Shown times are in JuliaCon local time.)")
+        else
+            println("(Shown times are in the following time zone: $(timezone(now)))")
+        end
+    else
+        println()
+    end
     return nothing
 end
 
-function now(::Val{:text}; now)
+function now(::Val{:text}; now, show_time)
     running_talks = get_running_talks(; now=now)
     str = ""
     if !isnothing(running_talks)
@@ -263,14 +284,14 @@ function now(::Val{:text}; now)
     return str
 end
 
-function now(::Val{:terminal}; now)
+function now(::Val{:terminal}; now, show_time)
     running_talks = get_running_talks(; now=now)
-    _print_running_talks(running_talks; now=now)
+    _print_talks_list(running_talks; now=now, bold_title=true, show_time)
     return nothing
 end
 
 # A dispatcher for the `now` methods. Default to terminal output.
-now(; now=default_now(), output=:terminal) = JuliaCon.now(Val(output); now=now)
+now(; now=default_now(), output=:terminal, show_time=false) = JuliaCon.now(Val(output); now=now, show_time=show_time)
 
 function _speakers2str(speaker::Vector{String})
     if length(speaker) <= 3
@@ -485,4 +506,12 @@ function tomorrow(;
     output=:terminal, # can take the :text value to output a Vector{String}
 )
     return today(Val(output); now = now + Dates.Day(1), room, terminal_links, highlighting = false)
+end
+
+function talksby(speaker::AbstractString)
+    jcon = get_conference_schedule()
+    df = filter(jcon; view=true) do talk
+        any(contains(s, speaker) for s in talk.speaker)
+    end
+    _print_talks_list(df; bold_title=true, show_time=true)
 end

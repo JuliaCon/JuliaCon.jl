@@ -20,7 +20,7 @@ using TimeZones
 
     @testset "Preferences" begin
         @testset "Debug mode" begin
-            fakenow = ZonedDateTime(Dates.DateTime("2023-07-27T13:35:00.000"), tz"MET")
+            fakenow = ZonedDateTime(Dates.DateTime("2023-07-27T21:35:00.000"), tz"MET")
             @test JuliaCon.default_now() != fakenow
             @test isnothing(JuliaCon.debugmode())
             @test JuliaCon.default_now() == fakenow
