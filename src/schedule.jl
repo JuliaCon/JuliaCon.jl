@@ -22,11 +22,12 @@ function json2df(conf)
         type = JuliaConTalkType[],
         url = String[],
         track = String[],
+        room = String[],
     )
 
     for day in conf["days"]
         date = Date(day["date"])
-        for (track, talks) in day["rooms"]
+        for (room, talks) in day["rooms"]
             for talk in talks
                 # parse duration
                 tmp = split(talk["duration"], ':')
@@ -39,7 +40,8 @@ function json2df(conf)
                     :speaker => String[p["public_name"] for p in talk["persons"]],
                     :type => talktype_from_str(talk["type"]),
                     :url => talk["url"],
-                    :track => track,
+                    :track => talk["track"],
+                    :room => room,
                 )
                 push!(df, d)
             end
@@ -113,6 +115,28 @@ function _track2color(track::String)
         return :blue
     elseif track == "JuMP Track"
         return 208 # orange, see https://github.com/KristofferC/Crayons.jl/blob/master/README.md
+    else
+        return :default
+    end
+end
+
+function _room2color(room::String)
+    if room == "26-100"
+        return :red
+    elseif room == "32-082"
+        return :green
+    elseif room == "32-123"
+        return :magenta
+    elseif room == "32-124"
+        return :blue
+    elseif room == "32-144"
+        return :yellow
+    elseif contains(room, "32-D463") || contains(room, "Star")
+        return :cyan
+    elseif contains(room, "32-G449") || contains(room, "Kiva")
+        return 208 # orange, see https://github.com/KristofferC/Crayons.jl/blob/master/README.md
+    elseif room == "Online"
+        return :white
     else
         return :default
     end
@@ -206,11 +230,15 @@ function _print_running_talks(running_talks; now=default_now())
     # println(Dates.format(default_now(), "HH:MM dd-mm-YYYY"))
     for talk in eachrow(running_talks)
         println()
-        printstyled(_add_track_emoji(string(talk.track)); bold=true, color=_track2color(talk.track))
+        printstyled(talk.room; bold=true, color=_room2color(talk.room))
         println()
         println("\t", talk.title, " (", string(talk.type), ")")
         println("\t", "├─ ", _speakers2str(talk.speaker))
-        println("\t", "└─ ", talk.url)
+        println("\t", "├─ ", talk.url)
+        print("\t", "└─ ");
+        # printstyled(_add_track_emoji(string(talk.track)); bold=false, color=_track2color(talk.track));
+        printstyled(talk.track; bold=false, color=_track2color(talk.track));
+        println()
     end
     println("\n")
     println("(Full schedule: $(CONFERENCE_SCHEDULE_URL))")
@@ -223,10 +251,11 @@ function now(::Val{:text}; now)
     if !isnothing(running_talks)
         for talk in eachrow(running_talks)
             str *= """
-            $(_add_track_emoji(string(talk.track)))
+            $(string(talk.room))
             \t$(talk.title) ($(string(talk.type)))
             \t├─ $(JuliaCon._speakers2str(talk.speaker))
-            \t└─ $(talk.url)
+            \t├─ $(talk.url)
+            \t└─ $(talk.track)
             """
         end
     end
@@ -252,7 +281,7 @@ function _speakers2str(speaker::Vector{String})
 end
 
 function _get_today_tables(;
-    now=default_now(), track=nothing, terminal_links=TERMINAL_LINKS, highlighting=true, text_highlighting=false
+    now=default_now(), room=nothing, terminal_links=TERMINAL_LINKS, highlighting=true, text_highlighting=false
 )
     jcon = get_conference_schedule()
 
@@ -260,8 +289,8 @@ function _get_today_tables(;
     today_end_utc = ZonedDateTime(DateTime(Date(now) + Day(1), Time("00:00")), JULIACON_TIMEZONE)
 
     talks_today = filter(jcon; view=true) do talk
-        # talk is in the requested track (default: any)
-        if !isnothing(track) && talk.track != track
+        # talk is in the requested room (default: any)
+        if !isnothing(room) && talk.room != room
             return false
         end
 
@@ -273,24 +302,25 @@ function _get_today_tables(;
     nrow(talks_today) > 0 || return (nothing, nothing, nothing)
 
     # create talk tables
-    tracks = String[]
+    rooms = String[]
     tables = Matrix{Union{String,URLTextCell}}[]
     highlighters = Union{Nothing,Highlighter}[]
 
-    # for each track
-    for track_grp in groupby(talks_today, :track)
+    # for each room
+    for room_grp in groupby(talks_today, :room; sort=true)
         # build talk-data matrix
-        data = Matrix{Union{String,URLTextCell}}(undef, nrow(track_grp), 4)
-        for (i, talk) in enumerate(eachrow(track_grp))
+        data = Matrix{Union{String,URLTextCell}}(undef, nrow(room_grp), 5)
+        for (i, talk) in enumerate(eachrow(room_grp))
             data[i, 1] = Dates.format(astimezone(talk.start, timezone(now)), "HH:MM")
             data[i, 2] = terminal_links ? URLTextCell(talk.title, talk.url) : talk.title
             data[i, 3] = JuliaCon.abbrev(talk.type)
             data[i, 4] = JuliaCon._speakers2str(talk.speaker)
+            data[i, 5] = talk.track
         end
 
         h_running = Highlighter((data, m, n) -> false, crayon"yellow")
         if highlighting
-            for (i, talk) in enumerate(eachrow(track_grp))
+            for (i, talk) in enumerate(eachrow(room_grp))
                 start_time = talk.start
                 end_time = talk.start + talk.duration
                 if start_time <= astimezone(now, JULIACON_TIMEZONE) < end_time
@@ -307,31 +337,31 @@ function _get_today_tables(;
             end
         end
 
-        push!(tracks, first(track_grp).track)
+        push!(rooms, first(room_grp).room)
         push!(tables, data)
         push!(highlighters, h_running)
     end
 
-    @assert length(tables) == length(highlighters) == length(tracks)
-    return (tracks, tables, highlighters)
+    @assert length(tables) == length(highlighters) == length(rooms)
+    return (rooms, tables, highlighters)
 end
 
 # A dispatcher for the `today` methods. Defaults to terminal output.
 function today(;
     now=default_now(),
-    track=nothing,
+    room=nothing,
     terminal_links=TERMINAL_LINKS,
     output=:terminal, # can take the :text value to output a Vector{String}
     highlighting=true
 )
-    return today(Val(output); now, track, terminal_links, highlighting)
+    return today(Val(output); now, room, terminal_links, highlighting)
 end
 
-function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting)
+function today(::Val{:terminal}; now, room, terminal_links, highlighting=true)
+    rooms, tables, highlighters = _get_today_tables(; now, room, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
-    header = (["Time", "Title", "Type", "Speaker"],)
+    header = (["Time", "Title", "Type", "Speaker", "Track"],)
     header_crayon = crayon"dark_gray bold"
     border_crayon = crayon"dark_gray"
     h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
@@ -339,21 +369,21 @@ function today(::Val{:terminal}; now, track, terminal_links, highlighting=true)
     println()
     println(Dates.format(TimeZones.Date(now), "E d U Y"))
 
-    for j in eachindex(tracks)
-        track = tracks[j]
+    for j in eachindex(rooms)
+        room = rooms[j]
         data = tables[j]
         h_running = highlighters[j]
         println()
         pretty_table(
             data;
-            title=_add_track_emoji(track),
-            title_crayon=Crayon(; foreground=_track2color(track), bold=true),
+            title=room,
+            title_crayon=Crayon(; foreground=_room2color(room), bold=true),
             header=header,
             header_crayon=header_crayon,
             border_crayon=border_crayon,
             highlighters=(h_times, h_running),
             tf=tf_unicode_rounded,
-            alignment=[:c, :l, :c, :l],
+            alignment=[:c, :l, :c, :l, :l],
         )
     end
 
@@ -398,32 +428,32 @@ function _add_track_emoji(track::AbstractString)
     end
 end
 
-function today(::Val{:text}; now, track, terminal_links, highlighting=true)
-    tracks, tables, highlighters = _get_today_tables(; now, track, terminal_links, highlighting, text_highlighting=highlighting)
+function today(::Val{:text}; now, room, terminal_links, highlighting=true)
+    rooms, tables, highlighters = _get_today_tables(; now, room, terminal_links, highlighting, text_highlighting=highlighting)
     isnothing(tables) && return nothing
 
-    header = (["Time", "Title", "Type", "Speaker"],)
+    header = (["Time", "Title", "Type", "Speaker", "Track"],)
     header_crayon = crayon"dark_gray bold"
     border_crayon = crayon"dark_gray"
     h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
 
     strings = Vector{String}()
     push!(strings, string(Dates.format(TimeZones.Date(now), "E d U Y")))
-    for j in eachindex(tracks)
-        track = tracks[j]
+    for j in eachindex(rooms)
+        room = rooms[j]
         data = tables[j]
         h_running = highlighters[j]
         str = pretty_table(
             String,
             data;
-            title=_add_track_emoji(track),
-            title_crayon=Crayon(; foreground=_track2color(track), bold=true),
+            title=room,
+            title_crayon=Crayon(; foreground=_room2color(room), bold=true),
             header=header,
             header_crayon=header_crayon,
             border_crayon=border_crayon,
             highlighters=(h_times, h_running),
             tf=tf_unicode_rounded,
-            alignment=[:c, :l, :c, :l],
+            alignment=[:c, :l, :c, :l, :l],
         )
         push!(strings, str)
     end
@@ -450,9 +480,9 @@ end
 
 function tomorrow(;
     now=default_now(),
-    track=nothing,
+    room=nothing,
     terminal_links=TERMINAL_LINKS,
     output=:terminal, # can take the :text value to output a Vector{String}
 )
-    return today(Val(output); now = now + Dates.Day(1), track, terminal_links, highlighting = false)
+    return today(Val(output); now = now + Dates.Day(1), room, terminal_links, highlighting = false)
 end
