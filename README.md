@@ -4,22 +4,6 @@
 [![Coverage](https://codecov.io/gh/JuliaCon/JuliaCon.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaCon/JuliaCon.jl)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 
-## T-Shirt code
-
-This package makes the code on the JuliaCon 2021/2022/2023 [T-shirts](#t-shirt) work! Of course, you should [buy one here](https://www.bonfire.com/juliacon-repl/)!
-
-To make the `@everywhere` do something you need to start Julia with multiple worker processes: `julia -p 4`.
-
-<!-- <img width="588" alt="Screenshot 2021-05-31 at 22 28 07" src="https://user-images.githubusercontent.com/187980/120239846-7c6afc80-c25f-11eb-892b-dd52be136f36.png"> -->
-
-```julia
-using JuliaCon, Distributed
-
-@everywhere juliacon2023()
-```
-
-<img width="1145" alt="Screenshot 2021-06-02 at 02 05 12" src="https://user-images.githubusercontent.com/187980/120404611-04780180-c347-11eb-860e-88eed268d1a0.png">
-
 
 ## Live schedule
 
@@ -64,3 +48,28 @@ There are three cache modes: `:DEFAULT`, `:NEVER`, `:ALWAYS`. You can switch bet
 
 * `JuliaCon.debugmode(on::Bool)`: Simulates that we are live / in the middle of JuliaCon.
 * `JuliaCon.set_json_src(src::Symbol)`: Anticipated input: `:pretalx`, `:github` ([JuliaConDataArchive](https://github.com/JuliaCon/JuliaConDataArchive))
+
+## Search for talks by speaker
+
+```
+JuliaCon.talksby("Carsten Bauer")
+```
+
+![image](https://github.com/JuliaCon/JuliaCon.jl/assets/187980/e58c0281-ef1c-4ccd-93c3-8ce86e095622)
+
+
+## T-Shirt code
+
+This package makes the code on the JuliaCon 2021/2022/2023 [T-shirts](#t-shirt) work! Of course, you should [buy one here](https://www.bonfire.com/juliacon-repl/)!
+
+To make the `@everywhere` do something you need to start Julia with multiple worker processes: `julia -p 4`.
+
+<!-- <img width="588" alt="Screenshot 2021-05-31 at 22 28 07" src="https://user-images.githubusercontent.com/187980/120239846-7c6afc80-c25f-11eb-892b-dd52be136f36.png"> -->
+
+```julia
+using JuliaCon, Distributed
+
+@everywhere juliacon2023()
+```
+
+<img width="1145" alt="Screenshot 2021-06-02 at 02 05 12" src="https://user-images.githubusercontent.com/187980/120404611-04780180-c347-11eb-860e-88eed268d1a0.png">
