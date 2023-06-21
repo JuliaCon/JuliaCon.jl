@@ -51,7 +51,7 @@ There are three cache modes: `:DEFAULT`, `:NEVER`, `:ALWAYS`. You can switch bet
 
 ## Search for talks by speaker
 
-```
+```julia
 JuliaCon.talksby("Carsten Bauer")
 ```
 
