@@ -41,7 +41,7 @@ function set_terminallinks(on::Bool)
     )
 end
 function set_local_timezone(tz::AbstractString)
-    if !istimezone(tz)
+    if !istimezone(tz, TimeZones.Class(:DEFAULT) | TimeZones.Class(:LEGACY))
         throw(ArgumentError("\"$tz\" isn't a valid timezone. Check out TimeZones.timezone_names() for possible options."))
     else
         @set_preferences!("local_timezone" => tz)
