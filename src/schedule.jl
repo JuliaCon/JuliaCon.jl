@@ -324,16 +324,16 @@ function _get_today_tables(;
 
     # create talk tables
     rooms = String[]
-    tables = Matrix{Union{String,URLTextCell}}[]
+    tables = Matrix{Union{String,UrlTextCell}}[]
     highlighters = Union{Nothing,Highlighter}[]
 
     # for each room
     for room_grp in groupby(talks_today, :room; sort=true)
         # build talk-data matrix
-        data = Matrix{Union{String,URLTextCell}}(undef, nrow(room_grp), 5)
+        data = Matrix{Union{String,UrlTextCell}}(undef, nrow(room_grp), 5)
         for (i, talk) in enumerate(eachrow(room_grp))
             data[i, 1] = Dates.format(astimezone(talk.start, timezone(now)), "HH:MM")
-            data[i, 2] = terminal_links ? URLTextCell(talk.title, talk.url) : talk.title
+            data[i, 2] = terminal_links ? UrlTextCell(talk.title, talk.url) : talk.title
             data[i, 3] = JuliaCon.abbrev(talk.type)
             data[i, 4] = JuliaCon._speakers2str(talk.speaker)
             data[i, 5] = talk.track
@@ -346,7 +346,7 @@ function _get_today_tables(;
                 end_time = talk.start + talk.duration
                 if start_time <= astimezone(now, JULIACON_TIMEZONE) < end_time
                     if text_highlighting
-                        if data[i, 2] isa URLTextCell
+                        if data[i, 2] isa UrlTextCell
                             data[i, 2].text = string("> ", data[i, 2].text)
                         else
                             data[i, 2] = string("> ", data[i, 2])

@@ -19,7 +19,7 @@ TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 [compat]
 JSON = "0.21"
 Preferences = "1.2"
-PrettyTables = "1.1"
+PrettyTables = "2"
 TimeZones = "1.5"
 TimerOutputs = "0.5"
 DataFrames = "1.0"
