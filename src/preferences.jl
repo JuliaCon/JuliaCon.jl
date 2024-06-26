@@ -4,7 +4,7 @@ const CACHE_DIR = @load_preference(
 )
 const TIMEOUT = parse(Float64, @load_preference("timeout", "5.0"))
 const TERMINAL_LINKS = parse(Bool, @load_preference("terminal_links", "false"))
-const JULIACON_TIMEZONE = tz"UTC-4" # Eastern Daylight Time at MIT, Cambridge, USA (2023)
+const JULIACON_TIMEZONE = tz"UTC+2" # Eastern Daylight Time at MIT, Cambridge, USA (2023)
 const LOCAL_TIMEZONE = begin
     tzstr = @load_preference("local_timezone", "")
     if !istimezone(tzstr)
@@ -16,8 +16,8 @@ const LOCAL_TIMEZONE = begin
     end
 end
 
-const PRETALX_JSON_URL = "https://pretalx.com/juliacon2023/schedule/export/schedule.json"
-const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2023_schedule/schedule.json"
+const PRETALX_JSON_URL = "https://pretalx.com/juliacon2024/schedule/export/schedule.json"
+const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2024_schedule/schedule.json"
 const jcon = Ref{DataFrame}()
 
 function set_cachemode(mode::Symbol)
@@ -68,9 +68,9 @@ Simulates that we are live / in the middle of JuliaCon.
 function debugmode(on::Bool=true)
     if on
         @eval JuliaCon function default_now()
-            return ZonedDateTime(Dates.DateTime("2023-07-27T21:35:00.000"), tz"MET")
-            # return ZonedDateTime(Dates.DateTime("2023-07-27T12:15:00.000"), JULIACON_TIMEZONE)
-        end # JuliaCon2023
+            # return ZonedDateTime(Dates.DateTime("2024-07-10T11:00:00.000"), JULIACON_TIMEZONE)
+            return ZonedDateTime(Dates.DateTime("2024-07-09T11:00:00.000"), JULIACON_TIMEZONE)
+        end
     else
         @eval JuliaCon default_now() = TimeZones.now(LOCAL_TIMEZONE)
     end

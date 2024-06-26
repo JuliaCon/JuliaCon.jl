@@ -7,7 +7,7 @@ struct BoF <: JuliaConTalkType end
 struct Minisymposium <: JuliaConTalkType end
 struct Workshop <: JuliaConTalkType end
 struct Experience <: JuliaConTalkType end
-struct VirtualPoster <: JuliaConTalkType end
+struct Poster <: JuliaConTalkType end
 struct SocialHour <: JuliaConTalkType end
 struct UnkownTalkType <: JuliaConTalkType end
 
@@ -33,6 +33,7 @@ function json2df(conf)
                 tmp = split(talk["duration"], ':')
                 dur = Hour(tmp[1]) + Minute(tmp[2])
 
+                # println(talk["title"], " - ", talk["track"])
                 d = Dict(
                     :start => ZonedDateTime(DateTime(date, Time(talk["start"])), JULIACON_TIMEZONE),
                     :duration => dur,
@@ -40,7 +41,7 @@ function json2df(conf)
                     :speaker => String[p["public_name"] for p in talk["persons"]],
                     :type => talktype_from_str(talk["type"]),
                     :url => talk["url"],
-                    :track => talk["track"],
+                    :track => isnothing(talk["track"]) ? "nothing" : talk["track"],
                     :room => room,
                 )
                 push!(df, d)
@@ -60,7 +61,7 @@ function talktype_from_str(str)
         return SponsorTalk()
     elseif str == "Keynote"
         return Keynote()
-    elseif str == "Birds of Feather" || str == "BoF (45 mins)"
+    elseif str == "Birds of Feather" || str == "BoF (45 mins)" || str == "Birds of Feather (BoF)"
         return BoF()
     elseif str == "Minisymposium"
         return Minisymposium()
@@ -68,8 +69,8 @@ function talktype_from_str(str)
         return Workshop()
     elseif contains(str, "Experience")
         return Experience()
-    elseif contains(lowercase(str), "virtual poster")
-        return VirtualPoster()
+    elseif contains(lowercase(str), "poster")
+        return Poster()
     elseif contains(str, "Social hour")
         return SocialHour()
     else
@@ -85,7 +86,7 @@ string(x::BoF) = "Birds of Feather"
 string(x::Minisymposium) = "Minisymposium"
 string(x::Workshop) = "Workshop"
 string(x::Experience) = "Experience"
-string(x::VirtualPoster) = "Virtual Poster"
+string(x::Poster) = "Poster"
 string(x::SocialHour) = "Social hour"
 string(x::UnkownTalkType) = "Unknown"
 
@@ -97,7 +98,7 @@ abbrev(::Type{BoF}) = "BoF"
 abbrev(::Type{Minisymposium}) = "M"
 abbrev(::Type{Workshop}) = "W"
 abbrev(::Type{Experience}) = "E"
-abbrev(::Type{VirtualPoster}) = "P"
+abbrev(::Type{Poster}) = "P"
 abbrev(::Type{SocialHour}) = "SH"
 abbrev(::Type{UnkownTalkType}) = "U"
 
@@ -424,7 +425,7 @@ function today(::Val{:terminal}; now, room, terminal_links, highlighting=true)
     print(abbrev(Minisymposium), " = Minisymposium, ")
     println(abbrev(BoF), " = Birds of Feather, ")
     print(abbrev(Experience), " = Experience, ")
-    print(abbrev(VirtualPoster), " = Virtual Poster, ")
+    print(abbrev(Poster), " = Poster, ")
     println(abbrev(SocialHour), " = Social Hour")
     println()
     println("Check out $(CONFERENCE_SCHEDULE_URL) for more information.")
@@ -491,7 +492,7 @@ function today(::Val{:text}; now, room, terminal_links, highlighting=true)
     legend *= """
     $(JuliaCon.abbrev(JuliaCon.Talk)) = Talk, $(JuliaCon.abbrev(JuliaCon.LightningTalk)) = Lightning Talk, $(JuliaCon.abbrev(JuliaCon.SponsorTalk)) = Sponsor Talk, $(JuliaCon.abbrev(JuliaCon.Keynote)) = Keynote,
     $(JuliaCon.abbrev(JuliaCon.Workshop)) = Workshop, $(JuliaCon.abbrev(JuliaCon.Minisymposium)) = Minisymposium, $(JuliaCon.abbrev(JuliaCon.BoF)) = Birds of Feather,
-    $(JuliaCon.abbrev(JuliaCon.Experience)) = Experience, $(JuliaCon.abbrev(JuliaCon.VirtualPoster)) = Virtual Poster, $(JuliaCon.abbrev(JuliaCon.SocialHour)) = Social Hour
+    $(JuliaCon.abbrev(JuliaCon.Experience)) = Experience, $(JuliaCon.abbrev(JuliaCon.Poster)) = Poster, $(JuliaCon.abbrev(JuliaCon.SocialHour)) = Social Hour
 
     Check out $(CONFERENCE_SCHEDULE_URL) for more information.
     """
