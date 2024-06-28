@@ -60,7 +60,7 @@ JuliaCon.talksby("Carsten Bauer")
 
 ## T-Shirt code
 
-This package makes the code on the JuliaCon 2021/2022/2023 [T-shirts](#t-shirt) work! Of course, you should [buy one here](https://www.bonfire.com/juliacon-repl/)!
+This package makes the code on the JuliaCon 2021/2022/2023/2024 [T-shirts](#t-shirt) work! Of course, you should [buy one here](https://www.bonfire.com/juliacon-repl/)!
 
 To make the `@everywhere` do something you need to start Julia with multiple worker processes: `julia -p 4`.
 

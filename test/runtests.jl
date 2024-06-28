@@ -5,15 +5,15 @@ import Dates
 using TimeZones
 
 @testset "JuliaCon.jl" begin
-    @testset "juliacon2023()" begin
+    @testset "juliacon2024()" begin
         @info "Local:"
-        @test isnothing(juliacon2023())
+        @test isnothing(juliacon2024())
 
         @info "Distributed:"
         withenv("JULIA_PROJECT"=>pwd()) do
             addprocs(4)
             @eval Main @everywhere using JuliaCon
-            @test isnothing(@everywhere juliacon2023())
+            @test isnothing(@everywhere juliacon2024())
             rmprocs(workers())
         end
     end
@@ -70,12 +70,12 @@ using TimeZones
         ## Print output
         foreach(println, JuliaCon.today(output = :text))
         println(JuliaCon.now(output = :text))
-        println(juliacon2023(output = :text))
+        println(juliacon2024(output = :text))
 
         ## Test output types
         @test eltype(JuliaCon.today(output = :text)) == String
         @test typeof(JuliaCon.now(output = :text)) == String
-        @test typeof(juliacon2023(output = :text)) == String
+        @test typeof(juliacon2024(output = :text)) == String
 
         JuliaCon.debugmode(false)
     end

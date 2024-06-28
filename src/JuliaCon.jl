@@ -36,6 +36,6 @@ function __init__()
     end
 end
 
-export juliacon2023
+export juliacon2024
 
 end
