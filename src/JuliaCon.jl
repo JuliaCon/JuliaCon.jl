@@ -10,6 +10,8 @@ using Downloads: download
 using PrettyTables
 using TimerOutputs
 using DataFrames
+using PrecompileTools
+
 
 include("preferences.jl")
 include("countries.jl")
@@ -35,6 +37,15 @@ function __init__()
         @eval Main @everywhere using JuliaCon
     end
 end
+
+
+@compile_workload begin
+    JuliaCon.today()
+    JuliaCon.talksby("Carsten Bauer")
+end
+
+
+
 
 export juliacon2024
 
