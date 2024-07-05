@@ -151,7 +151,7 @@ Get the conference schedule as a DataFrame.
 On first call, the schedule is downloaded from Pretalx and cached for further usage.
 """
 function get_conference_schedule()
-    isassigned(jcon) || update_schedule()
+    isnothing(jcon[]) && update_schedule()
     return jcon[]
 end
 

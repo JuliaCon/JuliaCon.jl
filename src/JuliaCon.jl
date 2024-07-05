@@ -10,6 +10,8 @@ using Downloads: download
 using PrettyTables
 using TimerOutputs
 using DataFrames
+using PrecompileTools
+
 
 include("preferences.jl")
 include("countries.jl")
@@ -33,6 +35,17 @@ function __init__()
         end
         # load JuliaCon.jl on all workers
         @eval Main @everywhere using JuliaCon
+    end
+end
+
+
+@compile_workload begin
+    redirect_stdout(Base.DevNull()) do
+        JuliaCon.today()
+        JuliaCon.tomorrow()
+        JuliaCon.now()
+        JuliaCon.talksby("Carsten Bauer")
+        JuliaCon.jcon[] = nothing
     end
 end
 
