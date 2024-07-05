@@ -18,7 +18,7 @@ end
 
 const PRETALX_JSON_URL = "https://pretalx.com/juliacon2024/schedule/export/schedule.json"
 const DATA_ARCHIVE_JSON_URL = "https://raw.githubusercontent.com/JuliaCon/JuliaConDataArchive/master/juliacon2024_schedule/schedule.json"
-const jcon = Ref{DataFrame}()
+const jcon = Ref{Union{Nothing, DataFrame}}(nothing)
 
 function set_cachemode(mode::Symbol)
     @assert mode in (:DEFAULT, :NEVER, :ALWAYS)

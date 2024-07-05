@@ -45,11 +45,9 @@ end
         JuliaCon.tomorrow()
         JuliaCon.now()
         JuliaCon.talksby("Carsten Bauer")
+        JuliaCon.jcon[] = nothing
     end
 end
-
-
-
 
 export juliacon2024
 
