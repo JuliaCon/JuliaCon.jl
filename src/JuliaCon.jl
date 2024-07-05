@@ -40,7 +40,7 @@ end
 
 
 @compile_workload begin
-    redirect_stdout(Pipe()) do
+    redirect_stdout(Base.DevNull()) do
         JuliaCon.today()
         JuliaCon.tomorrow()
         JuliaCon.now()
