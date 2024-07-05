@@ -49,6 +49,6 @@ end
     end
 end
 
-export juliacon2024
+export juliacon2024, today, tomorrow, now, talksby
 
 end
