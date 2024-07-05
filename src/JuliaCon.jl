@@ -40,8 +40,12 @@ end
 
 
 @compile_workload begin
-    JuliaCon.today()
-    JuliaCon.talksby("Carsten Bauer")
+    redirect_stdout(Pipe()) do
+        JuliaCon.today()
+        JuliaCon.tomorrow()
+        JuliaCon.now()
+        JuliaCon.talksby("Carsten Bauer")
+    end
 end
 
 
