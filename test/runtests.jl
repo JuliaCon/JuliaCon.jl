@@ -45,9 +45,9 @@ using TimeZones
     end
 
     @testset "Schedule" begin
-        @test isnothing(JuliaCon.jcon)
+        @test isnothing(JuliaCon.jcon[])
         JuliaCon.update_schedule()
-        @test !isnothing(JuliaCon.jcon)
+        @test !isnothing(JuliaCon.jcon[])
 
         JuliaCon.debugmode()
 
