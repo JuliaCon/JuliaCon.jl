@@ -512,7 +512,7 @@ end
 function talksby(speaker::AbstractString)
     jcon = get_conference_schedule()
     df = filter(jcon; view=true) do talk
-        any(contains(s, speaker) for s in talk.speaker)
+        any(contains(lowercase(s), lowercase(speaker)) for s in talk.speaker)
     end
     _print_talks_list(df; bold_title=true, show_time=true)
 end
