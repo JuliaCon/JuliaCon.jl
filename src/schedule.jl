@@ -23,6 +23,7 @@ function json2df(conf)
         url = String[],
         track = String[],
         room = String[],
+        abstract = String[]
     )
 
     for day in conf["days"]
@@ -43,6 +44,7 @@ function json2df(conf)
                     :url => talk["url"],
                     :track => isnothing(talk["track"]) ? "nothing" : talk["track"],
                     :room => room,
+                    :abstract => talk["abstract"]
                 )
                 push!(df, d)
             end
@@ -509,6 +511,12 @@ function tomorrow(;
     return today(Val(output); now = now + Dates.Day(1), room, terminal_links, highlighting = false)
 end
 
+
+"""
+    talksby(speaker::AbstractString)
+
+Search for talks by the given `speaker`.
+"""
 function talksby(speaker::AbstractString)
     jcon = get_conference_schedule()
     df = filter(jcon; view=true) do talk
@@ -517,15 +525,18 @@ function talksby(speaker::AbstractString)
     _print_talks_list(df; bold_title=true, show_time=true)
 end
 
-"""
-    talksabout(title::AbstractString)
 
-Search for talks with titles containing the given `title` string.
 """
-function talksabout(title::AbstractString)
+    talksabout(keyword::AbstractString; search_abstract=true)
+
+Search for talks with titles containing the given `keyword`.
+If `search_abstract` is `true`, also search in the abstracts of the talks.
+"""
+function talksabout(keyword::AbstractString; search_abstract=true)
     jcon = get_conference_schedule()
     df = filter(jcon; view=true) do talk
-        any(contains(lowercase(talk.title), lowercase(title)))
+        any(contains(lowercase(talk.title), lowercase(keyword))) ||
+        any(contains(lowercase(talk.abstract), lowercase(keyword))) && search_abstract
     end
     _print_talks_list(df; bold_title=true, show_time=true)
 end
