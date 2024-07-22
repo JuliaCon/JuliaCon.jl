@@ -57,7 +57,7 @@ JuliaCon.talksby("Carsten Bauer")
 
 ![image](https://github.com/JuliaCon/JuliaCon.jl/assets/187980/e58c0281-ef1c-4ccd-93c3-8ce86e095622)
 
-## Search for talks by title
+## Search for talks by title/abstract
 ```julia
 JuliaCon.talksabout("Optics")
 ```
