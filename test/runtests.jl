@@ -62,6 +62,9 @@ using TimeZones
         @test isnothing(JuliaCon.today(room="32-124"))
         @test isnothing(JuliaCon.today(terminal_links=true))
         @test isnothing(JuliaCon.tomorrow())
+        @test isnothing(JuliaCon.talksby("Felix"))
+        @test isnothing(JuliaCon.talksabout("wave"))
+        @test isnothing(JuliaCon.talksabout("wave", search_abstract=false))
 
         # output to text (Vector{Sting})
         println("\n")
