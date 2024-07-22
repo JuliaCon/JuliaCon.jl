@@ -516,3 +516,16 @@ function talksby(speaker::AbstractString)
     end
     _print_talks_list(df; bold_title=true, show_time=true)
 end
+
+"""
+    talksabout(title::AbstractString)
+
+Search for talks with titles containing the given `title` string.
+"""
+function talksabout(title::AbstractString)
+    jcon = get_conference_schedule()
+    df = filter(jcon; view=true) do talk
+        any(contains(lowercase(talk.title), lowercase(title)))
+    end
+    _print_talks_list(df; bold_title=true, show_time=true)
+end
