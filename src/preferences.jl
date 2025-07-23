@@ -4,7 +4,7 @@ const CACHE_DIR = @load_preference(
 )
 const TIMEOUT = parse(Float64, @load_preference("timeout", "5.0"))
 const TERMINAL_LINKS = parse(Bool, @load_preference("terminal_links", "false"))
-const JULIACON_TIMEZONE = tz"UTC+2" # Eastern Daylight Time at MIT, Cambridge, USA (2023)
+const JULIACON_TIMEZONE = tz"UTC-4" # Eastern Daylight Time at MIT, Cambridge, USA (2023)
 const LOCAL_TIMEZONE = begin
     tzstr = @load_preference("local_timezone", "")
     if !istimezone(tzstr)
