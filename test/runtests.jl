@@ -5,22 +5,22 @@ import Dates
 using TimeZones
 
 @testset "JuliaCon.jl" begin
-    @testset "juliacon2024()" begin
+    @testset "juliacon2025()" begin
         @info "Local:"
-        @test isnothing(juliacon2024())
+        @test isnothing(juliacon2025())
 
         @info "Distributed:"
         withenv("JULIA_PROJECT"=>pwd()) do
             addprocs(4)
             @eval Main @everywhere using JuliaCon
-            @test isnothing(@everywhere juliacon2024())
+            @test isnothing(@everywhere juliacon2025())
             rmprocs(workers())
         end
     end
 
     @testset "Preferences" begin
         @testset "Debug mode" begin
-            fakenow = ZonedDateTime(Dates.DateTime("2024-07-09T11:00:00.000"), JuliaCon.JULIACON_TIMEZONE)
+            fakenow = ZonedDateTime(Dates.DateTime("2025-07-23T11:00:00.000"), JuliaCon.JULIACON_TIMEZONE)
             @test JuliaCon.default_now() != fakenow
             @test isnothing(JuliaCon.debugmode())
             @test JuliaCon.default_now() == fakenow
@@ -73,12 +73,12 @@ using TimeZones
         ## Print output
         foreach(println, JuliaCon.today(output = :text))
         println(JuliaCon.now(output = :text))
-        println(juliacon2024(output = :text))
+        println(juliacon2025(output = :text))
 
         ## Test output types
         @test eltype(JuliaCon.today(output = :text)) == String
         @test typeof(JuliaCon.now(output = :text)) == String
-        @test typeof(juliacon2024(output = :text)) == String
+        @test typeof(juliacon202(output = :text)) == String
 
         JuliaCon.debugmode(false)
     end

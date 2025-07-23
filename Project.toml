@@ -1,7 +1,7 @@
 name = "JuliaCon"
 uuid = "bfca5e61-7ca9-4d61-a82b-6df663fb0d3c"
 authors = ["Carsten Bauer <crstnbr@gmail.com> and contributors"]
-version = "2024.0.1"
+version = "2025.0.1"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
