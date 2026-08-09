@@ -50,6 +50,6 @@ end
     end
 end
 
-export juliacon2025, today, tomorrow, now, talksby, talksabout
+export juliacon2026, today, tomorrow, now, talksby, talksabout
 
 end

@@ -5,20 +5,27 @@
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 
 
+Access the JuliaCon schedule from your terminal.
+
 ## Live schedule
 
 ```julia
 JuliaCon.now()
 ```
+<img alt="JuliaCon.now()" src="screenshots/screenshot-now.png">
 
-<img width="1145" alt="Screenshot 2021-06-02 at 02 04 16" src="https://user-images.githubusercontent.com/187980/120404636-15287780-c347-11eb-9111-ff1677d5c15c.png">
+```julia
+JuliaCon.today()
+```
+
+<img alt="JuliaCon.today()" src="screenshots/screenshot-today.png ">
 
 
 ```julia
-JuliaCon.today() # there also is JuliaCon.tomorrow() :)
+JuliaCon.tomorrow()
 ```
 
-<img width="1904" alt="Screenshot 2021-06-02 at 02 04 33" src="https://user-images.githubusercontent.com/187980/120404647-19549500-c347-11eb-8152-cbf432cb8292.png">
+<img alt="JuliaCon.tomorrow()" src="screenshots/screenshot-tomorrow.png">
 
 ### Terminal links
 
@@ -52,28 +59,16 @@ There are three cache modes: `:DEFAULT`, `:NEVER`, `:ALWAYS`. You can switch bet
 ## Search for talks by speaker
 
 ```julia
-JuliaCon.talksby("Carsten Bauer")
+JuliaCon.talksby("Jeff")
 ```
 
-![image](https://github.com/JuliaCon/JuliaCon.jl/assets/187980/e58c0281-ef1c-4ccd-93c3-8ce86e095622)
+<img alt="JuliaCon.talksby()" src="screenshots/screenshot-talksby.png">
+
 
 ## Search for talks by title/abstract
 ```julia
-JuliaCon.talksabout("Optics")
+JuliaCon.talksabout("Graphics")
 ```
 
-## T-Shirt code
+<img alt="JuliaCon.talksabout()" src="screenshots/screenshot-talksabout.png">
 
-This package makes the code on the JuliaCon 2021/2022/2023/2024 [T-shirts](#t-shirt) work! Of course, you should [buy one here](https://www.bonfire.com/juliacon-repl/)!
-
-To make the `@everywhere` do something you need to start Julia with multiple worker processes: `julia -p 4`.
-
-<!-- <img width="588" alt="Screenshot 2021-05-31 at 22 28 07" src="https://user-images.githubusercontent.com/187980/120239846-7c6afc80-c25f-11eb-892b-dd52be136f36.png"> -->
-
-```julia
-using JuliaCon, Distributed
-
-@everywhere juliacon2023()
-```
-
-<img width="1145" alt="Screenshot 2021-06-02 at 02 05 12" src="https://user-images.githubusercontent.com/187980/120404611-04780180-c347-11eb-860e-88eed268d1a0.png">
