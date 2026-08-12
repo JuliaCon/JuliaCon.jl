@@ -145,6 +145,15 @@ function _room2color(room::String)
     end
 end
 
+# Style of the per-room schedule tables: title colored like the room, gray header/borders.
+function _table_style(room::String)
+    return TextTableStyle(;
+        title=Crayon(; foreground=_room2color(room), bold=true),
+        first_line_column_label=crayon"dark_gray bold",
+        column_label=crayon"dark_gray bold",
+        table_border=crayon"dark_gray",
+    )
+end
 
 is_schedule_json_available() = isfile(joinpath(CACHE_DIR, "schedule.json"))
 
@@ -328,7 +337,7 @@ function _get_today_tables(;
     # create talk tables
     rooms = String[]
     tables = Matrix{Union{String,UrlTextCell}}[]
-    highlighters = Union{Nothing,Highlighter}[]
+    highlighters = TextHighlighter[]
 
     # for each room
     for room_grp in groupby(talks_today, :room; sort=true)
@@ -342,7 +351,7 @@ function _get_today_tables(;
             data[i, 5] = talk.track
         end
 
-        h_running = Highlighter((data, m, n) -> false, crayon"yellow")
+        h_running = TextHighlighter((data, m, n) -> false, crayon"yellow")
         if highlighting
             for (i, talk) in enumerate(eachrow(room_grp))
                 start_time = talk.start
@@ -356,7 +365,7 @@ function _get_today_tables(;
                         end
                     end
 
-                    h_running = Highlighter((data, m, n) -> m == i, crayon"yellow")
+                    h_running = TextHighlighter((data, m, n) -> m == i, crayon"yellow")
                 end
             end
         end
@@ -385,10 +394,9 @@ function today(::Val{:terminal}; now, room, terminal_links, highlighting=true)
     rooms, tables, highlighters = _get_today_tables(; now, room, terminal_links, highlighting)
     isnothing(tables) && return nothing
 
-    header = (["Time", "Title", "Type", "Speaker", "Track"],)
-    header_crayon = crayon"dark_gray bold"
-    border_crayon = crayon"dark_gray"
-    h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
+    column_labels = ["Time", "Title", "Type", "Speaker", "Track"]
+    h_times = TextHighlighter((data, i, j) -> j == 1, crayon"white bold")
+    table_format = TextTableFormat(; borders=text_table_borders__unicode_rounded)
 
     println()
     println(Dates.format(TimeZones.Date(now), "E d U Y"))
@@ -401,12 +409,10 @@ function today(::Val{:terminal}; now, room, terminal_links, highlighting=true)
         pretty_table(
             data;
             title=room,
-            title_crayon=Crayon(; foreground=_room2color(room), bold=true),
-            header=header,
-            header_crayon=header_crayon,
-            border_crayon=border_crayon,
-            highlighters=(h_times, h_running),
-            tf=tf_unicode_rounded,
+            column_labels=column_labels,
+            style=_table_style(room),
+            highlighters=[h_times, h_running],
+            table_format=table_format,
             alignment=[:c, :l, :c, :l, :l],
         )
     end
@@ -456,10 +462,9 @@ function today(::Val{:text}; now, room, terminal_links, highlighting=true)
     rooms, tables, highlighters = _get_today_tables(; now, room, terminal_links, highlighting, text_highlighting=highlighting)
     isnothing(tables) && return nothing
 
-    header = (["Time", "Title", "Type", "Speaker", "Track"],)
-    header_crayon = crayon"dark_gray bold"
-    border_crayon = crayon"dark_gray"
-    h_times = Highlighter((data, i, j) -> j == 1, crayon"white bold")
+    column_labels = ["Time", "Title", "Type", "Speaker", "Track"]
+    h_times = TextHighlighter((data, i, j) -> j == 1, crayon"white bold")
+    table_format = TextTableFormat(; borders=text_table_borders__unicode_rounded)
 
     strings = Vector{String}()
     push!(strings, string(Dates.format(TimeZones.Date(now), "E d U Y")))
@@ -471,12 +476,10 @@ function today(::Val{:text}; now, room, terminal_links, highlighting=true)
             String,
             data;
             title=room,
-            title_crayon=Crayon(; foreground=_room2color(room), bold=true),
-            header=header,
-            header_crayon=header_crayon,
-            border_crayon=border_crayon,
-            highlighters=(h_times, h_running),
-            tf=tf_unicode_rounded,
+            column_labels=column_labels,
+            style=_table_style(room),
+            highlighters=[h_times, h_running],
+            table_format=table_format,
             alignment=[:c, :l, :c, :l, :l],
         )
         push!(strings, str)
